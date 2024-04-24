@@ -1,8 +1,9 @@
-import React from 'react';
+import { useState } from 'react';
 
-function App() {
-  const value = 'World';
-  return <div>Hello {value}</div>;
+export default function Game() {
+  const [scream, setScream] = useState("aah!");
+
+  return (
+    <div onClick={() => setScream(`a${scream}`)}>{scream}</div>
+  )
 }
-
-export default App;
