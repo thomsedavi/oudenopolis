@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function Game() {
+export default function Game(): JSX.Element {
   const [scream, setScream] = useState("aah!");
 
   return (
