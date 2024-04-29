@@ -152,12 +152,12 @@ export default function Game(): JSX.Element {
   }
 
   const drawCell = (x: number, y: number): JSX.Element => {
-    const layers: JSX.Element[] = [];
+    const layers: [number, JSX.Element][] = [];
 
     if (x > 1) {
-      layers.push(<path key={`water(${x} ${y})`} d="M 360 0 L 720 180 L 360 360 L 0 180 Z" fill="lightgray" />);
+      layers.push([0, <path key={`water(${x} ${y})`} d="M 360 0 L 720 180 L 360 360 L 0 180 Z" fill="lightgray" />]);
     } else if (x === 1) {
-      layers.push(<path key={`water(${x} ${y})`} d="M 600 120 L 720 180 L 360 360 L 240 300 Z" fill="lightgray" />);
+      layers.push([120, <path key={`water(${x} ${y})`} d="M 600 120 L 720 180 L 360 360 L 240 300 Z" fill="lightgray" />]);
     }
 
     const cell = grid[`${x} ${y}`];
@@ -165,29 +165,29 @@ export default function Game(): JSX.Element {
     if (cell !== undefined) {
       if (cell.elements.find(element => element.id === 'road')) {
         if (x === 1) {
-          layers.push(<path key={`road1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />);
-          layers.push(<path key={`road2(${x} ${y})`} d="M 550 95 L 190 275" stroke="black" fill="none" />);
-          layers.push(<path key={`road3(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />);
+          layers.push([85, <path key={`road1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />]);
+          layers.push([95, <path key={`road2(${x} ${y})`} d="M 550 95 L 190 275" stroke="black" fill="none" />]);
+          layers.push([95, <path key={`road3(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />]);
         } else {
-          layers.push(<path key={`road1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />);
-          layers.push(<path key={`road2(${x} ${y})`} d="M 550 95 L 380 180 L 550 265" stroke="black" fill="none" />);
-          layers.push(<path key={`road3(${x} ${y})`} d="M 530 275 L 360 190 L 190 275" stroke="black" fill="none" />);
-          layers.push(<path key={`road4(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />);
+          layers.push([85, <path key={`road1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />]);
+          layers.push([95, <path key={`road2(${x} ${y})`} d="M 550 95 L 380 180 L 550 265" stroke="black" fill="none" />]);
+          layers.push([190, <path key={`road3(${x} ${y})`} d="M 530 275 L 360 190 L 190 275" stroke="black" fill="none" />]);
+          layers.push([95, <path key={`road4(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />]);
         }
       }
 
       if (cell.elements.find(element => element.id === 'harbour')) {
-        layers.push(<path key={`harbour(${x} ${y})`} d="M 540 150 L 600 180 L 570 195 L 510 165 Z" fill="black" />)
+        layers.push([150, <path key={`harbour(${x} ${y})`} d="M 540 150 L 600 180 L 570 195 L 510 165 Z" fill="black" />])
       }
 
       if (cell.elements.find(element => element.id === 'wood warehouse')) {
-        layers.push(<path key={`woodwarehouse(${x} ${y})`} d="M 440 150 L 480 170 L 440 190 L 400 170 Z" fill="darkgray" />)
+        layers.push([150, <path key={`woodwarehouse(${x} ${y})`} d="M 440 110 L 480 130 L 480 170 L 440 190 L 400 170 L 400 130 Z" fill="darkgray" />])
       }
     }
 
     return (
       <>
-        {layers}
+        {layers.sort((a, b) => a[0] - b[0]).map(element => element[1])}
         <path d="M 360 0 L 720 180 L 360 360 L 0 180 Z" fill="transparent" cursor="pointer" onClick={() => setSelected({x: x, y: y})} />
         {x === selected.x && y === selected.y && <path d="M 360 5 L 710 180 L 360 355 L 10 180 Z" fill="none" stroke="darkgray" strokeWidth="10" />}
       </>
