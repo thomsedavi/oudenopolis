@@ -1,12 +1,13 @@
 import { useState } from 'react';
+import { Element, ElementName } from './elements';
 
 export default function Game(): JSX.Element {
   const [showGrid, setShowGrid] = useState<boolean>(true); 
   const [focus, setFocus] = useState<{x: number, y: number}>({x: 0, y: 0});
   const [selected, setSelected] = useState<{x: number, y: number}>({x: 0, y: 0});
-  const [grid, setGrid] = useState<{ [id: string]: {elements: {id: string, version: number}[], assets: {id: string, time: number}[]}; }>({
-    '0 0': {elements: [{id: 'road', version: 1}], assets: [{id: 'harbour', time: 30}]},
-    '1 0': {elements: [{id: 'road', version: 1}, {id: 'harbour', version: 1}], assets: [{id: 'harbour', time: 15}]}
+  const [grid, setGrid] = useState<{ [id: string]: {elements: {id: Element, version: number}[], assets: {id: Element, time: number}[]}; }>({
+    '0 0': {elements: [{id: Element.Road, version: 1}], assets: [{id: Element.Seaport, time: 30}]},
+    '1 0': {elements: [{id: Element.Road, version: 1}, {id: Element.Seaport, version: 1}], assets: [{id: Element.Seaport, time: 15}]}
   });
 
   const has = (id: string, x: number, y: number): boolean => {
@@ -32,7 +33,7 @@ export default function Game(): JSX.Element {
       }
     }
 
-    if (id === 'road' && selected.x <= 1) {
+    if (id === Element.Road && selected.x <= 1) {
       const neighbourCoords: {x: number, y: number}[] = [
         {x: selected.x - 1, y: selected.y},
         {x: selected.x, y: selected.y + 1},
@@ -43,7 +44,7 @@ export default function Game(): JSX.Element {
       let match = false;
 
       neighbourCoords.forEach((neighbour: {x: number, y: number}) => {
-        if (grid[`${neighbour.x} ${neighbour.y}`]?.elements.find(element => element.id === 'road') !== undefined) {
+        if (grid[`${neighbour.x} ${neighbour.y}`]?.elements.find(element => element.id === Element.Road) !== undefined) {
           match = true;
         }
       });
@@ -51,12 +52,12 @@ export default function Game(): JSX.Element {
       return match;
     }
 
-    if (id === 'harbour' && selected.x === 1 && has('road', selected.x, selected.y)) {
+    if (id === Element.Seaport && selected.x === 1 && has(Element.Road, selected.x, selected.y)) {
       return true;
     }
 
-    if (id === 'wood warehouse') {
-      if (cell !== undefined && cell.assets.find(asset => asset.id === 'harbour' && asset.time <= 15) !== undefined) {
+    if (id === Element.WoodWarehouse) {
+      if (cell !== undefined && cell.assets.find(asset => asset.id === Element.Seaport && asset.time <= 15) !== undefined) {
         return true;
       } else {
         return false;
@@ -66,7 +67,7 @@ export default function Game(): JSX.Element {
     return false;
   }
 
-  const add = (id: string) => {
+  const add = (id: Element) => {
     if (!canAdd(id))
       return;
 
@@ -78,16 +79,16 @@ export default function Game(): JSX.Element {
     recalculate(prevGrid);
   }
 
-  const recalculate = (grid: { [id: string]: {elements: {id: string, version: number}[], assets: {id: string, time: number}[]}; }): void => {
-    const assets: {[id: string]: {id: string, time: number}[]} = {};
+  const recalculate = (grid: { [id: string]: {elements: {id: Element, version: number}[], assets: {id: Element, time: number}[]}; }): void => {
+    const assets: {[id: string]: {id: Element, time: number}[]} = {};
 
     Object.entries(grid).forEach(cell => {
       cell[1].assets = [];
 
-      if (cell[1].elements.find(element => element.id === 'harbour')) {
+      if (cell[1].elements.find(element => element.id === Element.Seaport)) {
         const visited: {[id: string]: {time: number, visited: boolean}} = {};
 
-        if (cell[1].elements.find(element => element.id === 'road')) {
+        if (cell[1].elements.find(element => element.id === Element.Road)) {
           visited[cell[0]] = {time: 15, visited: false};
         }
 
@@ -109,7 +110,7 @@ export default function Game(): JSX.Element {
             neighbourCoords.forEach(coord => {
               const neighbourCell = grid[`${coord.x} ${coord.y}`] ? grid[`${coord.x} ${coord.y}`] : {elements: []}
 
-              if (neighbourCell.elements.find(thing => thing.id === 'road')){
+              if (neighbourCell.elements.find(thing => thing.id === Element.Road)){
                 const nextTime = time + 15;
 
                 if (newVisited[`${coord.x} ${coord.y}`] === undefined) {
@@ -133,7 +134,7 @@ export default function Game(): JSX.Element {
         Object.entries(visited).forEach(visit => {
           var myAssets = assets[visit[0]] ? [...assets[visit[0]]] : []
 
-          myAssets.push({id: 'harbour', time: visit[1].time});
+          myAssets.push({id: Element.Seaport, time: visit[1].time});
 
           assets[visit[0]] = myAssets;
         });
@@ -163,25 +164,25 @@ export default function Game(): JSX.Element {
     const cell = grid[`${x} ${y}`];
 
     if (cell !== undefined) {
-      if (cell.elements.find(element => element.id === 'road')) {
+      if (cell.elements.find(element => element.id === Element.Road)) {
         if (x === 1) {
-          layers.push([85, <path key={`road1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />]);
-          layers.push([95, <path key={`road2(${x} ${y})`} d="M 550 95 L 190 275" stroke="black" fill="none" />]);
-          layers.push([95, <path key={`road3(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />]);
+          layers.push([85, <path key={`${Element.Road}1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />]);
+          layers.push([95, <path key={`${Element.Road}2(${x} ${y})`} d="M 550 95 L 190 275" stroke="black" fill="none" />]);
+          layers.push([95, <path key={`${Element.Road}3(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />]);
         } else {
-          layers.push([85, <path key={`road1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />]);
-          layers.push([95, <path key={`road2(${x} ${y})`} d="M 550 95 L 380 180 L 550 265" stroke="black" fill="none" />]);
-          layers.push([190, <path key={`road3(${x} ${y})`} d="M 530 275 L 360 190 L 190 275" stroke="black" fill="none" />]);
-          layers.push([95, <path key={`road4(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />]);
+          layers.push([85, <path key={`${Element.Road}1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />]);
+          layers.push([95, <path key={`${Element.Road}2(${x} ${y})`} d="M 550 95 L 380 180 L 550 265" stroke="black" fill="none" />]);
+          layers.push([190, <path key={`${Element.Road}3(${x} ${y})`} d="M 530 275 L 360 190 L 190 275" stroke="black" fill="none" />]);
+          layers.push([95, <path key={`${Element.Road}4(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />]);
         }
       }
 
-      if (cell.elements.find(element => element.id === 'harbour')) {
-        layers.push([150, <path key={`harbour(${x} ${y})`} d="M 540 150 L 600 180 L 570 195 L 510 165 Z" fill="black" />])
+      if (cell.elements.find(element => element.id === Element.Seaport)) {
+        layers.push([150, <path key={`${Element.Seaport}(${x} ${y})`} d="M 540 150 L 600 180 L 570 195 L 510 165 Z" fill="black" />])
       }
 
-      if (cell.elements.find(element => element.id === 'wood warehouse')) {
-        layers.push([150, <path key={`woodwarehouse(${x} ${y})`} d="M 440 110 L 480 130 L 480 170 L 440 190 L 400 170 L 400 130 Z" fill="darkgray" />])
+      if (cell.elements.find(element => element.id === Element.WoodWarehouse)) {
+        layers.push([150, <path key={`${Element.WoodWarehouse}(${x} ${y})`} d="M 440 110 L 480 130 L 480 170 L 440 190 L 400 170 L 400 130 Z" fill="darkgray" />])
       }
     }
 
@@ -290,11 +291,11 @@ export default function Game(): JSX.Element {
           </>}
         </svg>
       </div>
-      <button onClick={() => add('road')} disabled={!canAdd('road')}>Add Road</button>
-      <button onClick={() => add('harbour')} disabled={!canAdd('harbour')}>Add Harbour</button>
-      <button onClick={() => add('wood warehouse')} disabled={!canAdd('wood warehouse')}>Add Wood Warehouse</button>
+      <button onClick={() => add(Element.Road)} disabled={!canAdd(Element.Road)}>Add Road</button>
+      <button onClick={() => add(Element.Seaport)} disabled={!canAdd(Element.Seaport)}>Add Seaport</button>
+      <button onClick={() => add(Element.WoodWarehouse)} disabled={!canAdd(Element.WoodWarehouse)}>Add Wood Warehouse</button>
       {grid[`${selected.x} ${selected.y}`] && grid[`${selected.x} ${selected.y}`].assets.map((asset, index) => 
-        <div key={`asset${index}`}>{asset.id}: {asset.time}</div>
+        <div key={`asset${index}`}>{ElementName(asset.id)}: {asset.time}</div>
       )}
     </>
   )
