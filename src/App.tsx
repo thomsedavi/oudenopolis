@@ -155,9 +155,9 @@ export default function Game(): JSX.Element {
     const layers: JSX.Element[] = [];
 
     if (x > 1) {
-      layers.push(<rect key={`water(${x} ${y})`} x="0" y="0" width="360" height="360" fill="lightgray" />)
+      layers.push(<path key={`water(${x} ${y})`} d="M 360 0 L 720 180 L 360 360 L 0 180 Z" fill="lightgray" />);
     } else if (x === 1) {
-      layers.push(<rect key={`water(${x} ${y})`} x="240" y="0" width="120" height="360" fill="lightgray" />)
+      layers.push(<path key={`water(${x} ${y})`} d="M 600 120 L 720 180 L 360 360 L 240 300 Z" fill="lightgray" />);
     }
 
     const cell = grid[`${x} ${y}`];
@@ -165,32 +165,31 @@ export default function Game(): JSX.Element {
     if (cell !== undefined) {
       if (cell.elements.find(element => element.id === 'road')) {
         if (x === 1) {
-          layers.push(<line key={`road1(${x} ${y})`} x1="220" y1="0" x2="220" y2="360" stroke="black" />)
-          layers.push(<line key={`road2(${x} ${y})`} x1="240" y1="0" x2="240" y2="360" stroke="black" />)
-          layers.push(<line key={`road3(${x} ${y})`} x1="0" y1="170" x2="240" y2="170" stroke="black" />)
-          layers.push(<line key={`road4(${x} ${y})`} x1="0" y1="190" x2="240" y2="190" stroke="black" />)  
+          layers.push(<path key={`road1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />);
+          layers.push(<path key={`road2(${x} ${y})`} d="M 550 95 L 190 275" stroke="black" fill="none" />);
+          layers.push(<path key={`road3(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />);
         } else {
-          layers.push(<line key={`road1(${x} ${y})`} x1="170" y1="0" x2="170" y2="360" stroke="black" />)
-          layers.push(<line key={`road2(${x} ${y})`} x1="190" y1="0" x2="190" y2="360" stroke="black" />)
-          layers.push(<line key={`road3(${x} ${y})`} x1="0" y1="170" x2="360" y2="170" stroke="black" />)
-          layers.push(<line key={`road4(${x} ${y})`} x1="0" y1="190" x2="360" y2="190" stroke="black" />)  
+          layers.push(<path key={`road1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />);
+          layers.push(<path key={`road2(${x} ${y})`} d="M 550 95 L 380 180 L 550 265" stroke="black" fill="none" />);
+          layers.push(<path key={`road3(${x} ${y})`} d="M 530 275 L 360 190 L 190 275" stroke="black" fill="none" />);
+          layers.push(<path key={`road4(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />);
         }
       }
 
       if (cell.elements.find(element => element.id === 'harbour')) {
-        layers.push(<rect key={`harbour(${x} ${y})`} x="240" y="80" width="40" height="20" fill="black" />)
+        layers.push(<path key={`harbour(${x} ${y})`} d="M 540 150 L 600 180 L 570 195 L 510 165 Z" fill="black" />)
       }
 
       if (cell.elements.find(element => element.id === 'wood warehouse')) {
-        layers.push(<rect key={`woodwarehouse(${x} ${y})`} x="20" y="20" width="40" height="40" fill="darkgray" />)
+        layers.push(<path key={`woodwarehouse(${x} ${y})`} d="M 440 150 L 480 170 L 440 190 L 400 170 Z" fill="darkgray" />)
       }
     }
 
     return (
       <>
         {layers}
-        <rect x="0" y="0" width="360" height="360" fill="transparent" cursor="pointer" onClick={() => setSelected({x: x, y: y})} />
-        {x === selected.x && y === selected.y && <rect x="5" y="5" width="350" height="350" fill="none" stroke="darkgray" strokeWidth="10" />}
+        <path d="M 360 0 L 720 180 L 360 360 L 0 180 Z" fill="transparent" cursor="pointer" onClick={() => setSelected({x: x, y: y})} />
+        {x === selected.x && y === selected.y && <path d="M 360 5 L 710 180 L 360 355 L 10 180 Z" fill="none" stroke="darkgray" strokeWidth="10" />}
       </>
     )
   }
@@ -206,90 +205,88 @@ export default function Game(): JSX.Element {
       <div style={{width: '24em'}}>
 
         <svg viewBox="0 0 1440 1440" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(-180 -180)">
+          <g transform="translate(1080 -180)">
+            {drawCell(focus.x - 1, focus.y - 3)}
+          </g>
+          <g transform="translate(360 -180)">
             {drawCell(focus.x - 2, focus.y - 2)}
           </g>
-          <g transform="translate(180 -180)">
+          <g transform="translate(720 0)">
             {drawCell(focus.x - 1, focus.y - 2)}
           </g>
-          <g transform="translate(540 -180)">
+          <g transform="translate(1080 180)">
             {drawCell(focus.x, focus.y - 2)}
           </g>
-          <g transform="translate(900 -180)">
-            {drawCell(focus.x + 1, focus.y - 2)}
+          <g transform="translate(-360 -180)">
+            {drawCell(focus.x - 3, focus.y - 1)}
           </g>
-          <g transform="translate(1260 -180)">
-            {drawCell(focus.x + 2, focus.y - 2)}
-          </g>
-          <g transform="translate(-180 180)">
+          <g transform="translate(0 0)">
             {drawCell(focus.x - 2, focus.y - 1)}
           </g>
-          <g transform="translate(180 180)">
+          <g transform="translate(360 180)">
             {drawCell(focus.x - 1, focus.y - 1)}
           </g>
-          <g transform="translate(540 180)">
+          <g transform="translate(720 360)">
             {drawCell(focus.x, focus.y - 1)}
           </g>
-          <g transform="translate(900 180)">
+          <g transform="translate(1080 540)">
             {drawCell(focus.x + 1, focus.y - 1)}
           </g>
-          <g transform="translate(1260 180)">
-            {drawCell(focus.x + 2, focus.y - 1)}
-          </g>
-          <g transform="translate(-180 540)">
+          <g transform="translate(-360 180)">
             {drawCell(focus.x - 2, focus.y)}
           </g>
-          <g transform="translate(180 540)">
+          <g transform="translate(0 360)">
             {drawCell(focus.x - 1, focus.y)}
           </g>
-          <g transform="translate(540 540)">
+          <g transform="translate(360 540)">
             {drawCell(focus.x, focus.y)}
           </g>
-          <g transform="translate(900 540)">
+          <g transform="translate(720 720)">
             {drawCell(focus.x + 1, focus.y)}
           </g>
-          <g transform="translate(1260 540)">
+          <g transform="translate(1080 900)">
             {drawCell(focus.x + 2, focus.y)}
           </g>
-          <g transform="translate(-180 900)">
-            {drawCell(focus.x - 2, focus.y + 1)}
-          </g>
-          <g transform="translate(180 900)">
+          <g transform="translate(-360 540)">
             {drawCell(focus.x - 1, focus.y + 1)}
           </g>
-          <g transform="translate(540 900)">
+          <g transform="translate(0 720)">
             {drawCell(focus.x, focus.y + 1)}
           </g>
-          <g transform="translate(900 900)">
+          <g transform="translate(360 900)">
             {drawCell(focus.x + 1, focus.y + 1)}
           </g>
-          <g transform="translate(1260 900)">
+          <g transform="translate(720 1080)">
             {drawCell(focus.x + 2, focus.y + 1)}
           </g>
-          <g transform="translate(-180 1260)">
-            {drawCell(focus.x - 2, focus.y + 2)}
+          <g transform="translate(1080 1260)">
+            {drawCell(focus.x + 3, focus.y + 1)}
           </g>
-          <g transform="translate(180 1260)">
-            {drawCell(focus.x - 1, focus.y + 2)}
-          </g>
-          <g transform="translate(540 1260)">
+          <g transform="translate(-360 900)">
             {drawCell(focus.x, focus.y + 2)}
           </g>
-          <g transform="translate(900 1260)">
+          <g transform="translate(0 1080)">
             {drawCell(focus.x + 1, focus.y + 2)}
           </g>
-          <g transform="translate(1260 1260)">
+          <g transform="translate(360 1260)">
             {drawCell(focus.x + 2, focus.y + 2)}
           </g>
+          <g transform="translate(-360 1260)">
+            {drawCell(focus.x + 1, focus.y + 3)}
+          </g>
           {showGrid && <>
-            <line x1="180" y1="0" x2="180" y2="1440" stroke="black" />
-            <line x1="540" y1="0" x2="540" y2="1440" stroke="black" />
-            <line x1="900" y1="0" x2="900" y2="1440" stroke="black" />
-            <line x1="1260" y1="0" x2="1260" y2="1440" stroke="black" />
-            <line x1="0" y1="180" x2="1440" y2="180" stroke="black" />
-            <line x1="0" y1="540" x2="1440" y2="540" stroke="black" />
-            <line x1="0" y1="900" x2="1440" y2="900" stroke="black" />
-            <line x1="0" y1="1260" x2="1440" y2="1260" stroke="black" />
+            <line x1="1080" y1="0" x2="1440" y2="180" stroke="black" />
+            <line x1="360" y1="0" x2="1440" y2="540" stroke="black" />
+            <line x1="0" y1="180" x2="1440" y2="900" stroke="black" />
+            <line x1="0" y1="540" x2="1440" y2="1260" stroke="black" />
+            <line x1="0" y1="900" x2="1080" y2="1440" stroke="black" />
+            <line x1="0" y1="1260" x2="360" y2="1440" stroke="black" />
+            <line x1="360" y1="0" x2="0" y2="180" stroke="black" />
+            <line x1="1080" y1="0" x2="0" y2="540" stroke="black" />
+            <line x1="1440" y1="180" x2="0" y2="900" stroke="black" />
+            <line x1="1440" y1="540" x2="0" y2="1260" stroke="black" />
+            <line x1="1440" y1="900" x2="360" y2="1440" stroke="black" />
+            <line x1="1440" y1="1260" x2="1080" y2="1440" stroke="black" />
           </>}
         </svg>
       </div>
