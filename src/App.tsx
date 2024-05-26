@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { CitizenCode, Citizens, startingCitizens } from './citizens';
 import { AttributeCode, Attributes } from './attributes';
+import { District } from './districts';
 
 export default function Game(): JSX.Element {
   const [availableCards, setAvailableCards] = useState<CitizenCode[]>([]);
   const [cardsInHand, setCardsInHand] = useState<CitizenCode[]>([]);
   const [discardedCards, setDiscardedCards] = useState<CitizenCode[]>([]);
   const [selectedCards, setSelectedCards] = useState<CitizenCode[]>([]);
+  const [grid, setGrid] = useState<{[coords: string]: District}>({});
   const [errors, setErrors] = useState<string[]>([]);
 
   const getId = (ids: string[]): string => {
@@ -42,6 +44,18 @@ export default function Game(): JSX.Element {
     setDiscardedCards([]);    
     setCardsInHand([citizenCodes[0], citizenCodes[1], citizenCodes[2], citizenCodes[3]]);
     setSelectedCards([]);
+
+    const grid: {[coords: string]: District} = {};
+
+    grid['(-1,-1)'] = new District();
+    grid['(1,-1)'] = new District();
+    grid['(-2,0)'] = new District();
+    grid['(0,0)'] = new District();
+    grid['(2,0)'] = new District();
+    grid['(-1,1)'] = new District();
+    grid['(1,1)'] = new District();
+
+    setGrid(grid);
   }
 
   const validateCards = (): void => {
@@ -135,7 +149,7 @@ export default function Game(): JSX.Element {
     setSelectedCards([]);
   }
 
-  const cardElements = cardsInHand.map((cardId: CitizenCode, index: number) => {
+  const cardElements: JSX.Element[] = cardsInHand.map((cardId: CitizenCode, index: number) => {
     const card = Citizens[cardId];
     const nameBits = card.name.split(' ');
 
@@ -146,18 +160,26 @@ export default function Game(): JSX.Element {
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[0])).length > 1) {
       attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
+    } else {
+      attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeColor(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[1])).length > 1) {
       attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
+    } else {
+      attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeColor(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[2])).length > 1) {
       attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
+    } else {
+      attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeColor(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[3])).length > 1) {
       attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
+    } else {
+      attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeColor(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
     return <g key={`card${index}`} transform={`translate(${120 + (index * 220)} ${selectedCards.includes(cardId) ? 1395 : 1400}) scale(2.3)`}>
@@ -182,26 +204,44 @@ export default function Game(): JSX.Element {
     </g>;
   });
 
+  const mapElements: JSX.Element[] = Object.keys(grid).map(coordsString => {
+    const coords = coordsString.substring(1, coordsString.length - 1).split(',');
+
+    return <rect key={`district${coordsString}`} x={350 + (Number(coords[0]) * 100)} y={675 + (Number(coords[1]) * 100)} width='200' height='100' stroke='black' fill='none' />;
+  })
+
   return (
     <>
       <div>
         <svg viewBox='0 0 900 1600' xmlns='http://www.w3.org/2000/svg' width='18em'>
           <rect width='900' height='1600' fill='black' stroke='none' />
           <rect x='5' y='5' width='890' height='1590' fill='white' stroke='none' />
-          <rect x='35' y='35' width='90' height='160' fill='black' stroke='none' />
-          <rect x='40' y='40' width='80' height='150' fill='white' stroke='none' />
-          <rect x='25' y='25' width='90' height='160' fill='black' stroke='none' />
-          <rect x='30' y='30' width='80' height='150' fill='white' stroke='none' />
-          <rect x='15' y='15' width='90' height='160' fill='black' stroke='none' />
-          <rect x='20' y='20' width='80' height='150' fill='white' stroke='none' />
-          <text x={60 - 35} y='140' fontSize='10em' fontFamily='monospace' fill='black'>{cardsInDeck().length}</text>
-          <rect x='795' y='35' width='90' height='160' fill='black' stroke='none' />
-          <rect x='800' y='40' width='80' height='150' fill='white' stroke='none' />
-          <rect x='785' y='25' width='90' height='160' fill='black' stroke='none' />
-          <rect x='790' y='30' width='80' height='150' fill='white' stroke='none' />
-          <rect x='775' y='15' width='90' height='160' fill='black' stroke='none' />
-          <rect x='780' y='20' width='80' height='150' fill='white' stroke='none' />
-          <text x={820 - 35} y={discardedCards.length > 9 ? '120' : '140'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='black'>{discardedCards.length}</text>
+          {cardsInDeck().length > 0 && <g transform='translate(15 15)'>
+            {cardsInDeck().length > 4  && <>
+              <rect x='20' y='20' width='90' height='160' fill='black' stroke='none' />
+              <rect x='25' y='25' width='80' height='150' fill='white' stroke='none' />
+            </>}
+            {cardsInDeck().length > 1  && <>
+              <rect x='10' y='10' width='90' height='160' fill='black' stroke='none' />
+              <rect x='15' y='15' width='80' height='150' fill='white' stroke='none' />
+            </>}
+            <rect width='90' height='160' fill='black' stroke='none' />
+            <rect x='5' y='5' width='80' height='150' fill='white' stroke='none' />
+            <text x={45 - 35} y='125' fontSize='10em' fontFamily='monospace' fill='black'>{cardsInDeck().length}</text>
+          </g>}
+          {discardedCards.length > 0 && <g transform='translate(775 15)'>
+            {discardedCards.length > 4  && <>
+              <rect x='20' y='20' width='90' height='160' fill='black' stroke='none' />
+              <rect x='25' y='25' width='80' height='150' fill='white' stroke='none' />
+            </>}
+            {discardedCards.length > 1  && <>
+              <rect x='10' y='10' width='90' height='160' fill='black' stroke='none' />
+              <rect x='15' y='15' width='80' height='150' fill='white' stroke='none' />
+            </>}
+            <rect width='90' height='160' fill='black' stroke='none' />
+            <rect x='5' y='5' width='80' height='150' fill='white' stroke='none' />
+            <text x={45 - 35} y={discardedCards.length > 9 ? '105' : '125'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='black'>{discardedCards.length}</text>
+          </g>}
           {selectedCards.length > 0 && <g transform='translate(20 1115)'>
             <rect x='5' y='5' width='280' height='80' fill='black' stroke='none' />
             <rect width='280' height='80' fill='black' stroke='none' />
@@ -209,6 +249,7 @@ export default function Game(): JSX.Element {
             <text x='15' y='65' fontSize='5em' fontFamily='monospace' fill='black'>DISCARD</text>
             <rect width='280' height='80' fill='transparent' stroke='none' cursor='pointer' onClick={() => discardCards()} />
           </g>}
+          {mapElements}
           {cardElements}
         </svg>
       </div>
