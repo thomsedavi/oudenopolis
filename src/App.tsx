@@ -1,302 +1,220 @@
 import { useState } from 'react';
-import { Element, ElementName } from './elements';
+import { CitizenCode, Citizens, startingCitizens } from './citizens';
+import { AttributeCode, Attributes } from './attributes';
 
 export default function Game(): JSX.Element {
-  const [showGrid, setShowGrid] = useState<boolean>(true); 
-  const [focus, setFocus] = useState<{x: number, y: number}>({x: 0, y: 0});
-  const [selected, setSelected] = useState<{x: number, y: number}>({x: 0, y: 0});
-  const [grid, setGrid] = useState<{ [id: string]: {elements: {id: Element, version: number}[], assets: {id: Element, time: number}[]}; }>({
-    '0 0': {elements: [{id: Element.Road, version: 1}], assets: [{id: Element.Seaport, time: 30}]},
-    '1 0': {elements: [{id: Element.Road, version: 1}, {id: Element.Seaport, version: 1}], assets: [{id: Element.Seaport, time: 15}]}
-  });
+  const [availableCards, setAvailableCards] = useState<CitizenCode[]>([]);
+  const [cardsInHand, setCardsInHand] = useState<CitizenCode[]>([]);
+  const [discardedCards, setDiscardedCards] = useState<CitizenCode[]>([]);
+  const [selectedCards, setSelectedCards] = useState<CitizenCode[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
 
-  const has = (id: string, x: number, y: number): boolean => {
-    const cell = grid[`${selected.x} ${selected.y}`];
+  const getId = (ids: string[]): string => {
+    let id = `${Math.floor(Math.random() * 10)}-${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`;
 
-    if (cell === undefined) {
-      return false;
+    while (ids.includes(id)) {
+      id = `${Math.floor(Math.random() * 10)}-${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`;
     }
 
-    if (cell.elements.find(element => element.id === id) !== undefined) {
-      return true;
-    }
-
-    return false;
+    return id;
   }
 
-  const canAdd = (id: string): boolean => {
-    const cell = grid[`${selected.x} ${selected.y}`];
+  const cardsInDeck = (): CitizenCode[] => {
+    return availableCards.filter(c => !cardsInHand.includes(c) && !discardedCards.includes(c));
+  }
 
-    if (cell !== undefined) {
-      if (cell.elements.find(element => element.id === id) !== undefined) {
-        return false;
-      }
+  const toggleCard = (cardId: CitizenCode): void => {
+    let cards = [...selectedCards];
+
+    if (cards.includes(cardId)) {
+      cards = cards.filter(thisCard => thisCard != cardId);
+    } else {
+      cards.push(cardId);
     }
 
-    if (id === Element.Road && selected.x <= 1) {
-      const neighbourCoords: {x: number, y: number}[] = [
-        {x: selected.x - 1, y: selected.y},
-        {x: selected.x, y: selected.y + 1},
-        {x: selected.x + 1, y: selected.y},
-        {x: selected.x, y: selected.y - 1}
-      ];
+    setSelectedCards(cards);
+  }
 
-      let match = false;
+  const startGame = (): void => {
+    const citizenCodes = startingCitizens.sort(() => Math.random() - 0.5);
 
-      neighbourCoords.forEach((neighbour: {x: number, y: number}) => {
-        if (grid[`${neighbour.x} ${neighbour.y}`]?.elements.find(element => element.id === Element.Road) !== undefined) {
-          match = true;
+    setAvailableCards(startingCitizens);
+    setDiscardedCards([]);    
+    setCardsInHand([citizenCodes[0], citizenCodes[1], citizenCodes[2], citizenCodes[3]]);
+    setSelectedCards([]);
+  }
+
+  const validateCards = (): void => {
+    let newErrors: string[] = [];
+
+    Object.values(CitizenCode).forEach((i: CitizenCode) => {
+      Object.values(CitizenCode).forEach((j: CitizenCode) => {
+        if (i !== j) {
+          const iAttributes = Citizens[i]?.attributes ?? [];
+          const jAttributes = Citizens[j]?.attributes ?? [];
+          const sharedAttributes = iAttributes.filter(iAttribute => jAttributes.includes(iAttribute));
+
+          if (sharedAttributes.length > 1) {
+            newErrors.push(`${Citizens[i].name} and ${Citizens[i].name} share attributes ${sharedAttributes.map((k: AttributeCode) => Attributes[k].name)}. `);
+          }
         }
+      });  
+    });
+    
+    Object.values(AttributeCode).forEach((i: AttributeCode) => {
+      const usedCitizens = Object.keys(Citizens).filter(c => Citizens[c].attributes.includes(i));
+
+      let availableCitizens = Object.keys(Citizens).filter(citizen => !usedCitizens.includes(citizen));
+
+      availableCitizens = availableCitizens.filter(citizen => {
+        const citizenAttributes = Citizens[citizen];
+
+        let result: boolean = true;
+
+        if (citizenAttributes.attributes.length > 3 || usedCitizens.length > 3) {
+          result = false;
+        }
+
+        usedCitizens.forEach(usedCitizen => {
+          const usedCitizenAttributes = Citizens[usedCitizen].attributes;
+
+          const crossover = citizenAttributes.attributes.filter(att => usedCitizenAttributes.includes(att));
+
+          if (crossover.length > 0) {
+            result = false;
+          }
+        });
+
+        return result;
       });
 
-      return match;
-    }
-
-    if (id === Element.Seaport && selected.x === 1 && has(Element.Road, selected.x, selected.y)) {
-      return true;
-    }
-
-    if (id === Element.WoodWarehouse) {
-      if (cell !== undefined && cell.assets.find(asset => asset.id === Element.Seaport && asset.time <= 15) !== undefined) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    return false;
-  }
-
-  const add = (id: Element) => {
-    if (!canAdd(id))
-      return;
-
-    const prevGrid = { ...grid };
-    const prevCell = prevGrid[`${selected.x} ${selected.y}`] ? { ...prevGrid[`${selected.x} ${selected.y}`] } : {elements: [], assets: []};
-
-    prevGrid[`${selected.x} ${selected.y}`] = { ...prevCell, elements: [...prevCell.elements, {id: id, version: 1}]};
-
-    recalculate(prevGrid);
-  }
-
-  const recalculate = (grid: { [id: string]: {elements: {id: Element, version: number}[], assets: {id: Element, time: number}[]}; }): void => {
-    const assets: {[id: string]: {id: Element, time: number}[]} = {};
-
-    Object.entries(grid).forEach(cell => {
-      cell[1].assets = [];
-
-      if (cell[1].elements.find(element => element.id === Element.Seaport)) {
-        const visited: {[id: string]: {time: number, visited: boolean}} = {};
-
-        if (cell[1].elements.find(element => element.id === Element.Road)) {
-          visited[cell[0]] = {time: 15, visited: false};
-        }
-
-        while (Object.values(visited).find(visitedCell => !visitedCell.visited) !== undefined) {
-          const newVisited: {[id: string]: number} = {};
-
-          Object.entries(visited).forEach(visitedCell => {
-            const time = visitedCell[1].time;
-            visitedCell[1].visited = true;
-
-            const coords = visitedCell[0].split(' ').map(coord => Number(coord));
-            const neighbourCoords: {x: number, y: number}[] = [
-              {x: coords[0] - 1, y: coords[1]},
-              {x: coords[0], y: coords[1] + 1},
-              {x: coords[0] + 1, y: coords[1]},
-              {x: coords[0], y: coords[1] - 1}
-            ];
-
-            neighbourCoords.forEach(coord => {
-              const neighbourCell = grid[`${coord.x} ${coord.y}`] ? grid[`${coord.x} ${coord.y}`] : {elements: []}
-
-              if (neighbourCell.elements.find(thing => thing.id === Element.Road)){
-                const nextTime = time + 15;
-
-                if (newVisited[`${coord.x} ${coord.y}`] === undefined) {
-                  newVisited[`${coord.x} ${coord.y}`] = nextTime;
-                } else if (nextTime < newVisited[`${coord.x} ${coord.y}`]) {
-                  newVisited[`${coord.x} ${coord.y}`] = nextTime;
-                }
-              }
-            })
-          });
-
-          Object.entries(newVisited).forEach(newVisit => {
-            if (visited[newVisit[0]] === undefined) {
-              visited[newVisit[0]] = {time: newVisit[1], visited: false};
-            } else if (newVisit[1] < visited[newVisit[0]].time) {
-              visited[newVisit[0]] = {time: newVisit[1], visited: false};
-            }
-          });
-        }
-
-        Object.entries(visited).forEach(visit => {
-          var myAssets = assets[visit[0]] ? [...assets[visit[0]]] : []
-
-          myAssets.push({id: Element.Seaport, time: visit[1].time});
-
-          assets[visit[0]] = myAssets;
-        });
-      }
+      newErrors.push(`${Attributes[i].name} (${usedCitizens.length}) (has: ${usedCitizens.map(citizen => Citizens[citizen].name)}) (available: ${availableCitizens.map(citizen => Citizens[citizen].name)})`);
     });
 
-    Object.entries(assets).forEach(asset => {
-      if (grid[asset[0]] !== undefined) {
-        asset[1].forEach(ting => {
-          grid[asset[0]].assets.push(ting);
-        })
-      }
-    });
-
-    setGrid(grid);
+    setErrors(newErrors);
   }
 
-  const drawCell = (x: number, y: number): JSX.Element => {
-    const layers: [number, JSX.Element][] = [];
+  const getAttributeColor = (attributeId: AttributeCode): string => {
+    let count = 0;
 
-    if (x > 1) {
-      layers.push([0, <path key={`water(${x} ${y})`} d="M 360 0 L 720 180 L 360 360 L 0 180 Z" fill="lightgray" />]);
-    } else if (x === 1) {
-      layers.push([120, <path key={`water(${x} ${y})`} d="M 600 120 L 720 180 L 360 360 L 240 300 Z" fill="lightgray" />]);
-    }
+    cardsInHand.forEach(cardId => {
+      const attributes = Citizens[cardId].attributes;
 
-    const cell = grid[`${x} ${y}`];
+      attributes.includes(attributeId) && count++;
+    });
 
-    if (cell !== undefined) {
-      if (cell.elements.find(element => element.id === Element.Road)) {
-        if (x === 1) {
-          layers.push([85, <path key={`${Element.Road}1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />]);
-          layers.push([95, <path key={`${Element.Road}2(${x} ${y})`} d="M 550 95 L 190 275" stroke="black" fill="none" />]);
-          layers.push([95, <path key={`${Element.Road}3(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />]);
+    return count > 1 ? 'black' : 'none';
+  }
+
+  const discardCards = (): void => {
+    let newCards = cardsInHand.map(cardId => selectedCards.includes(cardId) ? null : cardId);
+
+    const myCardsInDeck = cardsInDeck();
+    let index = 0;
+
+    newCards = newCards.map(cardId => {
+      if (cardId === null) {
+        if (myCardsInDeck.length <= index) {
+          return null;
         } else {
-          layers.push([85, <path key={`${Element.Road}1(${x} ${y})`} d="M 190 85 L 360 170 L 530 85" stroke="black" fill="none" />]);
-          layers.push([95, <path key={`${Element.Road}2(${x} ${y})`} d="M 550 95 L 380 180 L 550 265" stroke="black" fill="none" />]);
-          layers.push([190, <path key={`${Element.Road}3(${x} ${y})`} d="M 530 275 L 360 190 L 190 275" stroke="black" fill="none" />]);
-          layers.push([95, <path key={`${Element.Road}4(${x} ${y})`} d="M 170 265 L 340 180 L 170 95" stroke="black" fill="none" />]);
+          return myCardsInDeck[index++];
         }
+      } else {
+        return cardId;
       }
+    });
 
-      if (cell.elements.find(element => element.id === Element.Seaport)) {
-        layers.push([150, <path key={`${Element.Seaport}(${x} ${y})`} d="M 540 150 L 600 180 L 570 195 L 510 165 Z" fill="black" />])
-      }
+    const newCardsInHand: CitizenCode[] = [];
 
-      if (cell.elements.find(element => element.id === Element.WoodWarehouse)) {
-        layers.push([150, <path key={`${Element.WoodWarehouse}(${x} ${y})`} d="M 440 110 L 480 130 L 480 170 L 440 190 L 400 170 L 400 130 Z" fill="darkgray" />])
-      }
+    newCards.forEach(cardId => {
+      cardId != null && (newCardsInHand.push(cardId));
+    });
+
+    setCardsInHand(newCardsInHand);
+    setDiscardedCards(prev => [...prev, ...selectedCards]);
+    setSelectedCards([]);
+  }
+
+  const cardElements = cardsInHand.map((cardId: CitizenCode, index: number) => {
+    const card = Citizens[cardId];
+    const nameBits = card.name.split(' ');
+
+    let attribute0: JSX.Element[] = [];
+    let attribute1: JSX.Element[] = [];
+    let attribute2: JSX.Element[] = [];
+    let attribute3: JSX.Element[] = [];
+
+    if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[0])).length > 1) {
+      attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
-    return (
-      <>
-        {layers.sort((a, b) => a[0] - b[0]).map(element => element[1])}
-        <path d="M 360 0 L 720 180 L 360 360 L 0 180 Z" fill="transparent" cursor="pointer" onClick={() => setSelected({x: x, y: y})} />
-        {x === selected.x && y === selected.y && <path d="M 360 5 L 710 180 L 360 355 L 10 180 Z" fill="none" stroke="darkgray" strokeWidth="10" />}
-      </>
-    )
-  }
+    if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[1])).length > 1) {
+      attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
+    }
+
+    if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[2])).length > 1) {
+      attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
+    }
+
+    if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[3])).length > 1) {
+      attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
+    }
+
+    return <g key={`card${index}`} transform={`translate(${120 + (index * 220)} ${selectedCards.includes(cardId) ? 1395 : 1400}) scale(2.3)`}>
+      {selectedCards.includes(cardId) && <rect x='-42' width='90' y='-77' height='160' fill='black'/>}
+      <rect x='-45' width='90' y='-80' height='160' fill='black'/>
+      <rect x='-42' width='84' y='-77' height='154' fill='white'/>
+      <text x={0 - (nameBits[0].length * 3.6)} y='-60' fontSize='1em' fontFamily='monospace' fill='black'>{nameBits[0]}</text>
+      {nameBits[1] && <text x={0 - (nameBits[1].length * 3.6)} y='-40' fontSize='1em' fontFamily='monospace' fill='black'>{nameBits[1]}</text>}
+      <g transform='translate(-40 -20) scale(35)'>
+        {attribute0}
+      </g>
+      <g transform='translate(0 -20) scale(35)'>
+        {attribute1}
+      </g>
+      <g transform='translate(-40 20) scale(35)'>
+        {attribute2}
+      </g>
+      <g transform='translate(0 20) scale(35)'>
+        {attribute3}
+      </g>
+      <rect x='-45' width='90' y='-80' height='160' fill='transparent' cursor='pointer' onClick={() => toggleCard(cardId)}></rect>
+    </g>;
+  });
 
   return (
     <>
-      <button onClick={() => setFocus({...focus, y: focus.y - 1})}>↑</button>
-      <button onClick={() => setFocus({...focus, x: focus.x - 1})}>←</button>
-      <button onClick={() => setFocus({...focus, x: focus.x + 1})}>→</button>
-      <button onClick={() => setFocus({...focus, y: focus.y + 1})}>↓</button>
-      <button onClick={() => setFocus({x: 0, y: 0})}>Centre</button>
-      <button onClick={() => setShowGrid(prevState => !prevState)}>Toggle Grid</button>
-      <div style={{width: '24em'}}>
-
-        <svg viewBox="0 0 1440 1440" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(1080 -180)">
-            {drawCell(focus.x - 1, focus.y - 3)}
-          </g>
-          <g transform="translate(360 -180)">
-            {drawCell(focus.x - 2, focus.y - 2)}
-          </g>
-          <g transform="translate(720 0)">
-            {drawCell(focus.x - 1, focus.y - 2)}
-          </g>
-          <g transform="translate(1080 180)">
-            {drawCell(focus.x, focus.y - 2)}
-          </g>
-          <g transform="translate(-360 -180)">
-            {drawCell(focus.x - 3, focus.y - 1)}
-          </g>
-          <g transform="translate(0 0)">
-            {drawCell(focus.x - 2, focus.y - 1)}
-          </g>
-          <g transform="translate(360 180)">
-            {drawCell(focus.x - 1, focus.y - 1)}
-          </g>
-          <g transform="translate(720 360)">
-            {drawCell(focus.x, focus.y - 1)}
-          </g>
-          <g transform="translate(1080 540)">
-            {drawCell(focus.x + 1, focus.y - 1)}
-          </g>
-          <g transform="translate(-360 180)">
-            {drawCell(focus.x - 2, focus.y)}
-          </g>
-          <g transform="translate(0 360)">
-            {drawCell(focus.x - 1, focus.y)}
-          </g>
-          <g transform="translate(360 540)">
-            {drawCell(focus.x, focus.y)}
-          </g>
-          <g transform="translate(720 720)">
-            {drawCell(focus.x + 1, focus.y)}
-          </g>
-          <g transform="translate(1080 900)">
-            {drawCell(focus.x + 2, focus.y)}
-          </g>
-          <g transform="translate(-360 540)">
-            {drawCell(focus.x - 1, focus.y + 1)}
-          </g>
-          <g transform="translate(0 720)">
-            {drawCell(focus.x, focus.y + 1)}
-          </g>
-          <g transform="translate(360 900)">
-            {drawCell(focus.x + 1, focus.y + 1)}
-          </g>
-          <g transform="translate(720 1080)">
-            {drawCell(focus.x + 2, focus.y + 1)}
-          </g>
-          <g transform="translate(1080 1260)">
-            {drawCell(focus.x + 3, focus.y + 1)}
-          </g>
-          <g transform="translate(-360 900)">
-            {drawCell(focus.x, focus.y + 2)}
-          </g>
-          <g transform="translate(0 1080)">
-            {drawCell(focus.x + 1, focus.y + 2)}
-          </g>
-          <g transform="translate(360 1260)">
-            {drawCell(focus.x + 2, focus.y + 2)}
-          </g>
-          <g transform="translate(-360 1260)">
-            {drawCell(focus.x + 1, focus.y + 3)}
-          </g>
-          {showGrid && <>
-            <line x1="1080" y1="0" x2="1440" y2="180" stroke="black" />
-            <line x1="360" y1="0" x2="1440" y2="540" stroke="black" />
-            <line x1="0" y1="180" x2="1440" y2="900" stroke="black" />
-            <line x1="0" y1="540" x2="1440" y2="1260" stroke="black" />
-            <line x1="0" y1="900" x2="1080" y2="1440" stroke="black" />
-            <line x1="0" y1="1260" x2="360" y2="1440" stroke="black" />
-            <line x1="360" y1="0" x2="0" y2="180" stroke="black" />
-            <line x1="1080" y1="0" x2="0" y2="540" stroke="black" />
-            <line x1="1440" y1="180" x2="0" y2="900" stroke="black" />
-            <line x1="1440" y1="540" x2="0" y2="1260" stroke="black" />
-            <line x1="1440" y1="900" x2="360" y2="1440" stroke="black" />
-            <line x1="1440" y1="1260" x2="1080" y2="1440" stroke="black" />
-          </>}
+      <div>
+        <svg viewBox='0 0 900 1600' xmlns='http://www.w3.org/2000/svg' width='18em'>
+          <rect width='900' height='1600' fill='black' stroke='none' />
+          <rect x='5' y='5' width='890' height='1590' fill='white' stroke='none' />
+          <rect x='35' y='35' width='90' height='160' fill='black' stroke='none' />
+          <rect x='40' y='40' width='80' height='150' fill='white' stroke='none' />
+          <rect x='25' y='25' width='90' height='160' fill='black' stroke='none' />
+          <rect x='30' y='30' width='80' height='150' fill='white' stroke='none' />
+          <rect x='15' y='15' width='90' height='160' fill='black' stroke='none' />
+          <rect x='20' y='20' width='80' height='150' fill='white' stroke='none' />
+          <text x={60 - 35} y='140' fontSize='10em' fontFamily='monospace' fill='black'>{cardsInDeck().length}</text>
+          <rect x='795' y='35' width='90' height='160' fill='black' stroke='none' />
+          <rect x='800' y='40' width='80' height='150' fill='white' stroke='none' />
+          <rect x='785' y='25' width='90' height='160' fill='black' stroke='none' />
+          <rect x='790' y='30' width='80' height='150' fill='white' stroke='none' />
+          <rect x='775' y='15' width='90' height='160' fill='black' stroke='none' />
+          <rect x='780' y='20' width='80' height='150' fill='white' stroke='none' />
+          <text x={820 - 35} y={discardedCards.length > 9 ? '120' : '140'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='black'>{discardedCards.length}</text>
+          {selectedCards.length > 0 && <g transform='translate(20 1115)'>
+            <rect x='5' y='5' width='280' height='80' fill='black' stroke='none' />
+            <rect width='280' height='80' fill='black' stroke='none' />
+            <rect x='5' y='5' width='270' height='70' fill='white' stroke='none' />
+            <text x='15' y='65' fontSize='5em' fontFamily='monospace' fill='black'>DISCARD</text>
+            <rect width='280' height='80' fill='transparent' stroke='none' cursor='pointer' onClick={() => discardCards()} />
+          </g>}
+          {cardElements}
         </svg>
       </div>
-      <button onClick={() => add(Element.Road)} disabled={!canAdd(Element.Road)}>Add Road</button>
-      <button onClick={() => add(Element.Seaport)} disabled={!canAdd(Element.Seaport)}>Add Seaport</button>
-      <button onClick={() => add(Element.WoodWarehouse)} disabled={!canAdd(Element.WoodWarehouse)}>Add Wood Warehouse</button>
-      {grid[`${selected.x} ${selected.y}`] && grid[`${selected.x} ${selected.y}`].assets.map((asset, index) => 
-        <div key={`asset${index}`}>{ElementName(asset.id)}: {asset.time}</div>
-      )}
+      <button onClick={() => startGame()}>Start Game</button>
+      {false && <button onClick={() => validateCards()}>Validate Cards</button>}
+      {errors.map((error: string, i: number) => <div key={`error${i}`}>{error}</div>)}
     </>
   )
 }
