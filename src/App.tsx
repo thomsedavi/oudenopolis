@@ -14,16 +14,6 @@ export default function Game(): JSX.Element {
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>(undefined);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const getId = (ids: string[]): string => {
-    let id = `${Math.floor(Math.random() * 10)}-${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`;
-
-    while (ids.includes(id)) {
-      id = `${Math.floor(Math.random() * 10)}-${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`;
-    }
-
-    return id;
-  }
-
   const cardsInDeck = (): CitizenCode[] => {
     return availableCards.filter(c => !cardsInHand.includes(c) && !discardedCards.includes(c));
   }
@@ -32,7 +22,7 @@ export default function Game(): JSX.Element {
     let cards = [...selectedCards];
 
     if (cards.includes(cardId)) {
-      cards = cards.filter(thisCard => thisCard != cardId);
+      cards = cards.filter(thisCard => thisCard !== cardId);
     } else {
       cards.push(cardId);
     }
@@ -144,7 +134,7 @@ export default function Game(): JSX.Element {
     const newCardsInHand: CitizenCode[] = [];
 
     newCards.forEach(cardId => {
-      cardId != null && (newCardsInHand.push(cardId));
+      cardId !== null && (newCardsInHand.push(cardId));
     });
 
     setCardsInHand(newCardsInHand);
