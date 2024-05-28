@@ -1,4 +1,7 @@
 export class District {
-  constructor() {
+  amenities: string[];
+
+  constructor(amenities: string[]) {
+    this.amenities = amenities;
   }
 }

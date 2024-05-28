@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CitizenCode, Citizens, startingCitizens } from './citizens';
 import { AttributeCode, Attributes } from './attributes';
 import { District } from './districts';
+import { AmenityCode } from './amenities';
 
 export default function Game(): JSX.Element {
   const [availableCards, setAvailableCards] = useState<CitizenCode[]>([]);
@@ -9,6 +10,7 @@ export default function Game(): JSX.Element {
   const [discardedCards, setDiscardedCards] = useState<CitizenCode[]>([]);
   const [selectedCards, setSelectedCards] = useState<CitizenCode[]>([]);
   const [grid, setGrid] = useState<{[coords: string]: District}>({});
+  const [selectedCellId, setSelectedCellId] = useState<string | undefined>(undefined);
   const [errors, setErrors] = useState<string[]>([]);
 
   const getId = (ids: string[]): string => {
@@ -47,13 +49,13 @@ export default function Game(): JSX.Element {
 
     const grid: {[coords: string]: District} = {};
 
-    grid['(-1,-1)'] = new District();
-    grid['(1,-1)'] = new District();
-    grid['(-2,0)'] = new District();
-    grid['(0,0)'] = new District();
-    grid['(2,0)'] = new District();
-    grid['(-1,1)'] = new District();
-    grid['(1,1)'] = new District();
+    grid['(-1,-1)'] = new District([]);
+    grid['(1,-1)'] = new District([]);
+    grid['(-2,0)'] = new District([]);
+    grid['(0,0)'] = new District([AmenityCode.Wharf1, AmenityCode.Water1]);
+    grid['(2,0)'] = new District([AmenityCode.Water7]);
+    grid['(-1,1)'] = new District([]);
+    grid['(1,1)'] = new District([AmenityCode.Water7]);
 
     setGrid(grid);
   }
@@ -183,7 +185,7 @@ export default function Game(): JSX.Element {
     }
 
     return <g key={`card${index}`} transform={`translate(${120 + (index * 220)} ${selectedCards.includes(cardId) ? 1395 : 1400}) scale(2.3)`}>
-      {selectedCards.includes(cardId) && <rect x='-42' width='90' y='-77' height='160' fill='black'/>}
+      {selectedCards.includes(cardId) && <rect x='-42' width='90' y='-77' height='160' fill='darkgray'/>}
       <rect x='-45' width='90' y='-80' height='160' fill='black'/>
       <rect x='-42' width='84' y='-77' height='154' fill='white'/>
       <text x={0 - (nameBits[0].length * 3.6)} y='-60' fontSize='1em' fontFamily='monospace' fill='black'>{nameBits[0]}</text>
@@ -204,10 +206,28 @@ export default function Game(): JSX.Element {
     </g>;
   });
 
-  const mapElements: JSX.Element[] = Object.keys(grid).map(coordsString => {
-    const coords = coordsString.substring(1, coordsString.length - 1).split(',');
+  const mapElements: JSX.Element[] = Object.keys(grid).map(cellId => {
+    const coords = cellId.substring(1, cellId.length - 1).split(',');
 
-    return <rect key={`district${coordsString}`} x={350 + (Number(coords[0]) * 100)} y={675 + (Number(coords[1]) * 100)} width='200' height='100' stroke='black' fill='none' />;
+    const amenityElements: JSX.Element[] = [];
+
+    if (grid[cellId].amenities.includes(AmenityCode.Wharf1)) {
+      amenityElements.push(<rect key={`district${cellId}wharf`} x='50' y='50' width='20' height='20' stroke='none' fill='black' />);
+    }
+
+    if (grid[cellId].amenities.includes(AmenityCode.Water1)) {
+      amenityElements.push(<path key={`district${cellId}watersmall`} d='M 90,70 L 110,80 L 130,70 L 150,80' stroke='black' fill='none' />);
+    }
+
+    if (grid[cellId].amenities.includes(AmenityCode.Water7)) {
+      amenityElements.push(<path key={`district${cellId}watersmall`} d='M 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
+    }
+
+    return <g key={`district${cellId}`} transform={`translate(${350 + (Number(coords[0]) * 100)} ${675 + (Number(coords[1]) * 100)})`}>
+      <rect width='200' height='100' stroke={selectedCellId === cellId ? 'black' : 'darkgray'} fill='none' />
+      {amenityElements}
+      <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedCellId(cellId)} />
+    </g>;
   })
 
   return (
@@ -243,7 +263,7 @@ export default function Game(): JSX.Element {
             <text x={45 - 35} y={discardedCards.length > 9 ? '105' : '125'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='black'>{discardedCards.length}</text>
           </g>}
           {selectedCards.length > 0 && <g transform='translate(20 1115)'>
-            <rect x='5' y='5' width='280' height='80' fill='black' stroke='none' />
+            <rect x='5' y='5' width='280' height='80' fill='darkgray' stroke='none' />
             <rect width='280' height='80' fill='black' stroke='none' />
             <rect x='5' y='5' width='270' height='70' fill='white' stroke='none' />
             <text x='15' y='65' fontSize='5em' fontFamily='monospace' fill='black'>DISCARD</text>
