@@ -3,6 +3,7 @@ import { CitizenCode, Citizens, startingCitizens } from './citizens';
 import { AttributeCode, Attributes } from './attributes';
 import { District } from './districts';
 import { AmenityCode } from './amenities';
+import { Actions } from './actions';
 
 export default function Game(): JSX.Element {
   const [availableCards, setAvailableCards] = useState<CitizenCode[]>([]);
@@ -151,6 +152,30 @@ export default function Game(): JSX.Element {
     setSelectedCards([]);
   }
 
+  const actionElements: JSX.Element[] = [];
+  let actionIndex = 0;
+
+  Object.keys(Actions).forEach(actionId => {
+    const action = Actions[actionId];
+    let included = true;
+
+    action.cardRequirements.forEach(cardRequirement => {
+      if (cardsInHand.filter(cardId => Citizens[cardId].attributes.includes(cardRequirement.attributeId)).length < cardRequirement.count) {
+        included = false;
+      }
+    });
+
+    if (selectedCellId === undefined) {
+      included = false;
+    }
+    
+    if (included) {
+      actionElements.push(<text key={`action${actionId}`} x={50} y={100 + (actionIndex * 80)} fontSize='5em' fontFamily='monospace' fill='black'>{Actions[actionId].name}</text>);
+
+      actionIndex++;
+    }
+  });
+
   const cardElements: JSX.Element[] = cardsInHand.map((cardId: CitizenCode, index: number) => {
     const card = Citizens[cardId];
     const nameBits = card.name.split(' ');
@@ -226,7 +251,7 @@ export default function Game(): JSX.Element {
     return <g key={`district${cellId}`} transform={`translate(${350 + (Number(coords[0]) * 100)} ${675 + (Number(coords[1]) * 100)})`}>
       <rect width='200' height='100' stroke={selectedCellId === cellId ? 'black' : 'darkgray'} fill='none' />
       {amenityElements}
-      <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedCellId(cellId)} />
+      <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedCellId(prevCellId => prevCellId === cellId ? undefined : cellId)} />
     </g>;
   })
 
@@ -236,7 +261,7 @@ export default function Game(): JSX.Element {
         <svg viewBox='0 0 900 1600' xmlns='http://www.w3.org/2000/svg' width='18em'>
           <rect width='900' height='1600' fill='black' stroke='none' />
           <rect x='5' y='5' width='890' height='1590' fill='white' stroke='none' />
-          {cardsInDeck().length > 0 && <g transform='translate(15 15)'>
+          {cardsInDeck().length > 0 && <g transform='translate(15 1020)'>
             {cardsInDeck().length > 4  && <>
               <rect x='20' y='20' width='90' height='160' fill='black' stroke='none' />
               <rect x='25' y='25' width='80' height='150' fill='white' stroke='none' />
@@ -249,26 +274,27 @@ export default function Game(): JSX.Element {
             <rect x='5' y='5' width='80' height='150' fill='white' stroke='none' />
             <text x={45 - 35} y='125' fontSize='10em' fontFamily='monospace' fill='black'>{cardsInDeck().length}</text>
           </g>}
-          {discardedCards.length > 0 && <g transform='translate(775 15)'>
+          {discardedCards.length > 0 && <g transform='translate(135 1020)'>
             {discardedCards.length > 4  && <>
-              <rect x='20' y='20' width='90' height='160' fill='black' stroke='none' />
+              <rect x='20' y='20' width='90' height='160' fill='darkgray' stroke='none' />
               <rect x='25' y='25' width='80' height='150' fill='white' stroke='none' />
             </>}
             {discardedCards.length > 1  && <>
-              <rect x='10' y='10' width='90' height='160' fill='black' stroke='none' />
+              <rect x='10' y='10' width='90' height='160' fill='darkgray' stroke='none' />
               <rect x='15' y='15' width='80' height='150' fill='white' stroke='none' />
             </>}
-            <rect width='90' height='160' fill='black' stroke='none' />
+            <rect width='90' height='160' fill='darkgray' stroke='none' />
             <rect x='5' y='5' width='80' height='150' fill='white' stroke='none' />
-            <text x={45 - 35} y={discardedCards.length > 9 ? '105' : '125'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='black'>{discardedCards.length}</text>
+            <text x={45 - 35} y={discardedCards.length > 9 ? '105' : '125'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='darkgray'>{discardedCards.length}</text>
           </g>}
-          {selectedCards.length > 0 && <g transform='translate(20 1115)'>
+          {selectedCards.length > 0 && <g transform='translate(600 1115)'>
             <rect x='5' y='5' width='280' height='80' fill='darkgray' stroke='none' />
             <rect width='280' height='80' fill='black' stroke='none' />
             <rect x='5' y='5' width='270' height='70' fill='white' stroke='none' />
             <text x='15' y='65' fontSize='5em' fontFamily='monospace' fill='black'>DISCARD</text>
             <rect width='280' height='80' fill='transparent' stroke='none' cursor='pointer' onClick={() => discardCards()} />
           </g>}
+          {actionElements}
           {mapElements}
           {cardElements}
         </svg>
