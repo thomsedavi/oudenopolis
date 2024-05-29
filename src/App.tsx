@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CitizenCode, Citizens, startingCitizens } from './citizens';
 import { AttributeCode, Attributes } from './attributes';
-import { District } from './districts';
+import { Amenity, District } from './districts';
 import { AmenityCode } from './amenities';
 import { Actions } from './actions';
 
@@ -12,6 +12,7 @@ export default function Game(): JSX.Element {
   const [selectedCards, setSelectedCards] = useState<CitizenCode[]>([]);
   const [grid, setGrid] = useState<{[coords: string]: District}>({});
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>(undefined);
+  const [selectedAction, setSelectedAction] = useState<string | undefined>(undefined);
   const [errors, setErrors] = useState<string[]>([]);
 
   const cardsInDeck = (): CitizenCode[] => {
@@ -37,16 +38,17 @@ export default function Game(): JSX.Element {
     setDiscardedCards([]);    
     setCardsInHand([citizenCodes[0], citizenCodes[1], citizenCodes[2], citizenCodes[3]]);
     setSelectedCards([]);
+    setSelectedCellId(undefined);
 
     const grid: {[coords: string]: District} = {};
 
     grid['(-1,-1)'] = new District([]);
     grid['(1,-1)'] = new District([]);
     grid['(-2,0)'] = new District([]);
-    grid['(0,0)'] = new District([AmenityCode.Wharf1, AmenityCode.Water1]);
-    grid['(2,0)'] = new District([AmenityCode.Water7]);
+    grid['(0,0)'] = new District([{amenityId: AmenityCode.Water, size: 1}]);
+    grid['(2,0)'] = new District([{amenityId: AmenityCode.Water, size: 2}]);
     grid['(-1,1)'] = new District([]);
-    grid['(1,1)'] = new District([AmenityCode.Water7]);
+    grid['(1,1)'] = new District([{amenityId: AmenityCode.Water, size: 5}]);
 
     setGrid(grid);
   }
@@ -113,8 +115,8 @@ export default function Game(): JSX.Element {
     return count > 1 ? 'black' : 'none';
   }
 
-  const discardCards = (): void => {
-    let newCards = cardsInHand.map(cardId => selectedCards.includes(cardId) ? null : cardId);
+  const discardCards = (cardCode: CitizenCode): void => {
+    let newCards = cardsInHand.map(cardId => cardCode === cardId ? null : cardId);
 
     const myCardsInDeck = cardsInDeck();
     let index = 0;
@@ -138,8 +140,8 @@ export default function Game(): JSX.Element {
     });
 
     setCardsInHand(newCardsInHand);
-    setDiscardedCards(prev => [...prev, ...selectedCards]);
-    setSelectedCards([]);
+    setDiscardedCards(prev => [...prev, cardCode]);
+    setSelectedCards(prev => prev.filter(cardId => cardId !== cardCode));
   }
 
   const actionElements: JSX.Element[] = [];
@@ -150,17 +152,35 @@ export default function Game(): JSX.Element {
     let included = true;
 
     action.cardRequirements.forEach(cardRequirement => {
-      if (cardsInHand.filter(cardId => Citizens[cardId].attributes.includes(cardRequirement.attributeId)).length < cardRequirement.count) {
+      if (selectedCards.filter(cardId => Citizens[cardId].attributes.includes(cardRequirement.attributeId)).length < cardRequirement.count) {
         included = false;
       }
     });
 
     if (selectedCellId === undefined) {
       included = false;
+    } else {
+      const selectedCell = grid[selectedCellId];
+
+      let availableSpace = 7;
+
+      selectedCell.amenities.forEach(amenity => {
+        availableSpace -= amenity.size;
+      });
+
+      if (availableSpace < action.spaceRequired) {
+        included = false;
+      }
     }
     
     if (included) {
-      actionElements.push(<text key={`action${actionId}`} x={50} y={100 + (actionIndex * 80)} fontSize='5em' fontFamily='monospace' fill='black'>{Actions[actionId].name}</text>);
+      actionElements.push(<g key={`action${actionId}`} transform={`translate(50 ${(selectedAction === actionId ? 95 : 100) + (actionIndex * 120)})`}>
+        {selectedAction === actionId && <rect width='800' height='105' stroke='none' fill='darkgray' />}
+        <rect width='800' height='100' stroke='none' fill='black' />
+        <rect x={5} y={5} width={790} height={90} stroke='none' fill='white' />
+        <text x={25} y={70} fontSize='5em' fontFamily='monospace' fill='black'>{Actions[actionId].name}</text>
+        <rect width='800' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedAction(actionId)} />
+      </g>);
 
       actionIndex++;
     }
@@ -169,6 +189,7 @@ export default function Game(): JSX.Element {
   const cardElements: JSX.Element[] = cardsInHand.map((cardId: CitizenCode, index: number) => {
     const card = Citizens[cardId];
     const nameBits = card.name.split(' ');
+    const selected = selectedCards.includes(cardId);
 
     let attribute0: JSX.Element[] = [];
     let attribute1: JSX.Element[] = [];
@@ -199,8 +220,8 @@ export default function Game(): JSX.Element {
       attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeColor(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
-    return <g key={`card${index}`} transform={`translate(${120 + (index * 220)} ${selectedCards.includes(cardId) ? 1395 : 1400}) scale(2.3)`}>
-      {selectedCards.includes(cardId) && <rect x='-42' width='90' y='-77' height='160' fill='darkgray'/>}
+    return <g key={`card${index}`} transform={`translate(${120 + (index * 220)} ${selected ? 1395 : 1400}) scale(2.3)`}>
+      {selected && <rect x='-42' width='90' y='-77' height='160' fill='darkgray'/>}
       <rect x='-45' width='90' y='-80' height='160' fill='black'/>
       <rect x='-42' width='84' y='-77' height='154' fill='white'/>
       <text x={0 - (nameBits[0].length * 3.6)} y='-60' fontSize='1em' fontFamily='monospace' fill='black'>{nameBits[0]}</text>
@@ -217,7 +238,13 @@ export default function Game(): JSX.Element {
       <g transform='translate(0 20) scale(35)'>
         {attribute3}
       </g>
-      <rect x='-45' width='90' y='-80' height='160' fill='transparent' cursor='pointer' onClick={() => toggleCard(cardId)}></rect>
+      <rect x='-45' width='90' y='-80' height='160' fill='transparent' cursor='pointer' onClick={() => toggleCard(cardId)} />
+      {selected && <g transform={`translate(5 -100)`}>
+        <rect width={40} height={40} stroke='none' fill='black' />
+        <rect x={3} y={3} width={34} height={34} stroke='none' fill='white' />
+        <text x={12} y={30} fontSize='2em' fontFamily='monospace' fill='black'>X</text>
+        <rect width={40} height={40} stroke='none' fill='transparent' cursor='pointer' onClick={() => discardCards(cardId)} />
+      </g>}
     </g>;
   });
 
@@ -225,17 +252,21 @@ export default function Game(): JSX.Element {
     const coords = cellId.substring(1, cellId.length - 1).split(',');
 
     const amenityElements: JSX.Element[] = [];
+    const amenities: Amenity[] = grid[cellId].amenities;
 
-    if (grid[cellId].amenities.includes(AmenityCode.Wharf1)) {
-      amenityElements.push(<rect key={`district${cellId}wharf`} x='50' y='50' width='20' height='20' stroke='none' fill='black' />);
-    }
+    const water = amenities.filter(amenity => amenity.amenityId === AmenityCode.Water)[0];
 
-    if (grid[cellId].amenities.includes(AmenityCode.Water1)) {
-      amenityElements.push(<path key={`district${cellId}watersmall`} d='M 90,70 L 110,80 L 130,70 L 150,80' stroke='black' fill='none' />);
-    }
-
-    if (grid[cellId].amenities.includes(AmenityCode.Water7)) {
-      amenityElements.push(<path key={`district${cellId}watersmall`} d='M 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
+    if (water !== undefined) {
+      if (water.size === 1) {
+        amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80' stroke='black' fill='none' />);
+      } else if (water.size === 2) {
+        amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
+      } else if (water.size === 3) {
+        amenityElements.push(<path key={`district${cellId}water`} d='M 50,70 L 70,80 L 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
+      } else if (water.size === 5) {
+        amenityElements.push(<path key={`district${cellId}water1`} d='M 50,50 L 70,60 L 90,50 L 110,60 L 130,50 L 150,60 L 170,50 L 190,60' stroke='black' fill='none' />);
+        amenityElements.push(<path key={`district${cellId}water2`} d='M 50,70 L 70,80 L 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
+      }
     }
 
     return <g key={`district${cellId}`} transform={`translate(${350 + (Number(coords[0]) * 100)} ${675 + (Number(coords[1]) * 100)})`}>
@@ -276,13 +307,6 @@ export default function Game(): JSX.Element {
             <rect width='90' height='160' fill='darkgray' stroke='none' />
             <rect x='5' y='5' width='80' height='150' fill='white' stroke='none' />
             <text x={45 - 35} y={discardedCards.length > 9 ? '105' : '125'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='darkgray'>{discardedCards.length}</text>
-          </g>}
-          {selectedCards.length > 0 && <g transform='translate(600 1115)'>
-            <rect x='5' y='5' width='280' height='80' fill='darkgray' stroke='none' />
-            <rect width='280' height='80' fill='black' stroke='none' />
-            <rect x='5' y='5' width='270' height='70' fill='white' stroke='none' />
-            <text x='15' y='65' fontSize='5em' fontFamily='monospace' fill='black'>DISCARD</text>
-            <rect width='280' height='80' fill='transparent' stroke='none' cursor='pointer' onClick={() => discardCards()} />
           </g>}
           {actionElements}
           {mapElements}

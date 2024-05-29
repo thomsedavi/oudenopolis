@@ -1,5 +1,5 @@
 export enum AmenityCode {
-  Water1 = '5-97',
-  Water7 = '6-45',
-  Wharf1 = '2-37',
+  Water = '5-97',
+  Housing = '6-45',
+  Wharf = '2-37',
 }

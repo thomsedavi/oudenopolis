@@ -1,7 +1,14 @@
-export class District {
-  amenities: string[];
+import { AmenityCode } from "./amenities";
 
-  constructor(amenities: string[]) {
+export interface Amenity {
+  amenityId: AmenityCode,
+  size: number,
+}
+
+export class District {
+  amenities: Amenity[];
+
+  constructor(amenities: Amenity[]) {
     this.amenities = amenities;
   }
 }
