@@ -379,16 +379,16 @@ export const Citizens: ICitizens = {
 }
 
 export const startingCitizens: CitizenCode[] = [
-  CitizenCode.HomeOwner,
-  CitizenCode.Teacher,
-  CitizenCode.Farmer,
-  CitizenCode.OfficeWorker,
-  CitizenCode.FireFighter,
-  CitizenCode.Engineer,
-  CitizenCode.PoliceOfficer,
   CitizenCode.Athlete,
   CitizenCode.Doctor,
   CitizenCode.Driver,
-  CitizenCode.Shopkeeper,
+  CitizenCode.Engineer,
+  CitizenCode.Farmer,
+  CitizenCode.FireFighter,
+  CitizenCode.HomeOwner,
+  CitizenCode.Mayor,
   CitizenCode.Pilot,
+  CitizenCode.PoliceOfficer,
+  CitizenCode.Shopkeeper,
+  CitizenCode.Teacher,
 ]

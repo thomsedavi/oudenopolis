@@ -7,6 +7,26 @@ export interface Action {
 }
 
 export const Actions: { [id: string]: Action} = {
+  '0-39': {
+    name: 'Build Industrial Garage',
+    cardRequirements: [{attributeId: AttributeCode.Industry, count: 2}],
+    spaceRequired: 2,
+  },
+  '4-48': {
+    name: 'Build Grocery Cart',
+    cardRequirements: [{attributeId: AttributeCode.Food, count: 2}],
+    spaceRequired: 2,
+  },
+  '5-99': {
+    name: 'Build Petting Zoo',
+    cardRequirements: [{attributeId: AttributeCode.Animals, count: 2}],
+    spaceRequired: 2,
+  },
+  '0-18': {
+    name: 'Build Whirly Goober',
+    cardRequirements: [{attributeId: AttributeCode.Thrill, count: 2}],
+    spaceRequired: 2,
+  },
   '4-17': {
     name: 'Build Small Homes',
     cardRequirements: [{attributeId: AttributeCode.Residency, count: 2}],
