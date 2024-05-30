@@ -64,7 +64,7 @@ export default function Game(): JSX.Element {
           const sharedAttributes = iAttributes.filter(iAttribute => jAttributes.includes(iAttribute));
 
           if (sharedAttributes.length > 1) {
-            newErrors.push(`${Citizens[i].name} and ${Citizens[i].name} share attributes ${sharedAttributes.map((k: AttributeCode) => Attributes[k].name)}. `);
+            newErrors.push(`WHOOPS ${Citizens[i].name} and ${Citizens[j].name} share attributes ${sharedAttributes.map((k: AttributeCode) => Attributes[k].name)}. `);
           }
         }
       });  
@@ -100,10 +100,25 @@ export default function Game(): JSX.Element {
       newErrors.push(`${Attributes[i].name} (${usedCitizens.length}) (has: ${usedCitizens.map(citizen => Citizens[citizen].name)}) (available: ${availableCitizens.map(citizen => Citizens[citizen].name)})`);
     });
 
+    Object.values(CitizenCode).forEach((i: CitizenCode) => {
+      const citizen = Citizens[i];
+
+      if (citizen.attributes.length !== 4) {
+        newErrors.push(`${citizen.name} has ${citizen.attributes.length} elements`);
+      }
+    });
+
+    Object.values(AttributeCode).forEach((id: AttributeCode) => {
+      const startingCount = startingCitizens.filter(c => Citizens[c].attributes.includes(id)).length;
+
+      startingCount !== 0 && (newErrors.push(`${Attributes[id].name} starting count ${startingCount}`));
+
+    });
+
     setErrors(newErrors);
   }
 
-  const getAttributeColor = (attributeId: AttributeCode): string => {
+  const getAttributeFill = (attributeId: AttributeCode): string => {
     let count = 0;
 
     cardsInHand.forEach(cardId => {
@@ -113,6 +128,18 @@ export default function Game(): JSX.Element {
     });
 
     return count > 1 ? 'black' : 'none';
+  }
+
+  const getAttributeStroke = (attributeId: AttributeCode): string => {
+    let count = 0;
+
+    cardsInHand.forEach(cardId => {
+      const attributes = Citizens[cardId].attributes;
+
+      attributes.includes(attributeId) && count++;
+    });
+
+    return count > 1 ? 'black' : 'darkgray';
   }
 
   const discardCards = (cardCode: CitizenCode): void => {
@@ -197,27 +224,27 @@ export default function Game(): JSX.Element {
     let attribute3: JSX.Element[] = [];
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[0])).length > 1) {
-      attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[0])} fill={getAttributeFill(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeColor(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeFill(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[1])).length > 1) {
-      attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[1])} fill={getAttributeFill(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeColor(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeFill(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[2])).length > 1) {
-      attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[2])} fill={getAttributeFill(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeColor(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeFill(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[3])).length > 1) {
-      attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='black' fill={getAttributeColor(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[3])} fill={getAttributeFill(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeColor(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeFill(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
     }
 
     return <g key={`card${index}`} transform={`translate(${120 + (index * 220)} ${selected ? 1395 : 1400}) scale(2.3)`}>

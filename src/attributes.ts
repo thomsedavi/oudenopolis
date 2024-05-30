@@ -9,6 +9,8 @@ export enum AttributeCode {
   Dining = '6-87',
   Education = '3-50',
   Electricity = '8-63',
+  Exploration = '2-94',
+  Finance = '3-29',
   Fire = '6-49',
   Food = '9-15',
   Government = '9-32',
@@ -17,12 +19,15 @@ export enum AttributeCode {
   Industry = '8-26',
   Landmark = '2-88',
   Law = '0-60',
+  Military = '7-68',
+  Mathematics = '1-02',
   Music = '2-12',
   Mysticism = '8-83',
   Nature = '9-43',
   Office = '4-57',
   Residency = '4-25',
   Resources = '4-19',
+  Robotics = '0-09',
   Road = '9-37',
   Science = '2-08',
   Sea = '2-14',
@@ -84,6 +89,18 @@ export const Attributes: IAttributes = {
       'M 0.1,0.3 A 0.2,0.2 0,0,1 0.5,0.3 A 0.2,0.2 0,0,1 0.9,0.3 Q 0.9,0.6 0.5,0.9 Q 0.1,0.6 0.1,0.3 z',
     ]
   },
+  [AttributeCode.Exploration]: {
+    name: 'Exploration',
+    paths: [
+      'M 0.1,0.3 A 0.2,0.2 0,0,1 0.5,0.3 A 0.2,0.2 0,0,1 0.9,0.3 Q 0.9,0.6 0.5,0.9 Q 0.1,0.6 0.1,0.3 z',
+    ]
+  },
+  [AttributeCode.Finance]: {
+    name: 'Finance',
+    paths: [
+      'M 0.5,1 L 0.1,0.6 L 0.1,0.2 L0.3,0 L 0.3,0.3 L 0.6,0 L 0.9,0.3 L 0.9,0.6 Z',
+    ]
+  },
   [AttributeCode.Fire]: {
     name: 'Fire',
     paths: [
@@ -136,6 +153,18 @@ export const Attributes: IAttributes = {
       'M 0.8,0.1 L 0.9,0.1 L 0.9,0.9 L 0.8,0.9 Z',
     ]
   },
+  [AttributeCode.Mathematics]: {
+    name: 'Mathematics',
+    paths: [
+      'M 0.4,0 L 0.8,0.4 L 0.8,0.6 L 0.6,0.4 L 0.6,1 L 0.4,1 L 0.2,0.8 L 0.4,0.6 Z',
+    ]
+  },
+  [AttributeCode.Military]: {
+    name: 'Military',
+    paths: [
+      'M 0.4,0 L 0.8,0.4 L 0.8,0.6 L 0.6,0.4 L 0.6,1 L 0.4,1 L 0.2,0.8 L 0.4,0.6 Z',
+    ]
+  },
   [AttributeCode.Music]: {
     name: 'Music',
     paths: [
@@ -180,6 +209,12 @@ export const Attributes: IAttributes = {
       'M 0.45,0.4 L 0.55,0.4 L 0.55,0.6 L 0.45,0.6 Z',
     ]
   },
+  [AttributeCode.Robotics]: {
+    name: 'Robotics',
+    paths: [
+      'M 0.1,0.3 A 0.2,0.2 0,0,1 0.5,0.3 A 0.2,0.2 0,0,1 0.9,0.3 Q 0.9,0.6 0.5,0.9 Q 0.1,0.6 0.1,0.3 z',
+    ]
+  },
   [AttributeCode.Science]: {
     name: 'Science',
     paths: [
@@ -212,7 +247,7 @@ export const Attributes: IAttributes = {
     ]
   },
   [AttributeCode.Theatre]: {
-    name: 'Theate',
+    name: 'Theatre',
     paths: [
       'M 0.1,0.3 A 0.2,0.2 0,0,1 0.5,0.3 A 0.2,0.2 0,0,1 0.9,0.3 Q 0.9,0.6 0.5,0.9 Q 0.1,0.6 0.1,0.3 z',
     ]
