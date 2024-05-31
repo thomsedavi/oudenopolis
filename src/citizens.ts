@@ -2,7 +2,7 @@ import { AttributeCode } from "./attributes";
 
 interface ICitizens { [id: string]: { name: string, attributes: AttributeCode[] } }
 
-export enum CitizenCode {
+export enum CitizenId {
   Actor = '7-11',
   Architect = '0-04',
   Artist = '9-28',
@@ -43,7 +43,7 @@ export enum CitizenCode {
 }
 
 export const Citizens: ICitizens = {
-  [CitizenCode.Actor]: {
+  [CitizenId.Actor]: {
     name: 'Actor',
     attributes: [
       AttributeCode.Theatre,
@@ -52,7 +52,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Exploration,
     ]
   },
-  [CitizenCode.Architect]: {
+  [CitizenId.Architect]: {
     name: 'Architect',
     attributes: [
       AttributeCode.Landmark,
@@ -61,7 +61,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Electricity,
     ]
   },
-  [CitizenCode.Artist]: {
+  [CitizenId.Artist]: {
     name: 'Artist',
     attributes: [
       AttributeCode.Art,
@@ -70,7 +70,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Nature,
     ]
   },
-  [CitizenCode.Astronaut]: {
+  [CitizenId.Astronaut]: {
     name: 'Astronaut',
     attributes: [
       AttributeCode.Space,
@@ -79,7 +79,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Technology,
     ]
   },
-  [CitizenCode.Athlete]: {
+  [CitizenId.Athlete]: {
     name: 'Athlete',
     attributes: [
       AttributeCode.Sport,
@@ -88,7 +88,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Food,
     ]
   },
-  [CitizenCode.Banker]: {
+  [CitizenId.Banker]: {
     name: 'Banker',
     attributes: [
       AttributeCode.Finance,
@@ -97,7 +97,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Government,
     ]
   },
-  [CitizenCode.Captain]: {
+  [CitizenId.Captain]: {
     name: 'Captain',
     attributes: [
       AttributeCode.Sea,
@@ -106,7 +106,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Mathematics,
     ]
   },
-  [CitizenCode.Chef]: {
+  [CitizenId.Chef]: {
     name: 'Chef',
     attributes: [
       AttributeCode.Dining,
@@ -115,7 +115,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Fire,
     ]
   },
-  [CitizenCode.Cryptid]: {
+  [CitizenId.Cryptid]: {
     name: 'Cryptid',
     attributes: [
       AttributeCode.Mysticism,
@@ -124,7 +124,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Mathematics,
     ]
   },
-  [CitizenCode.Daredevil]: {
+  [CitizenId.Daredevil]: {
     name: 'Dare Devil',
     attributes: [
       AttributeCode.Thrill,
@@ -133,7 +133,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Sport,
     ]
   },
-  [CitizenCode.Doctor]: {
+  [CitizenId.Doctor]: {
     name: 'Doctor',
     attributes: [
       AttributeCode.Health,
@@ -142,7 +142,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Office,
     ]
   },
-  [CitizenCode.Driver]: {
+  [CitizenId.Driver]: {
     name: 'Driver',
     attributes: [
       AttributeCode.Road,
@@ -151,7 +151,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Law,
     ]
   },
-  [CitizenCode.Engineer]: {
+  [CitizenId.Engineer]: {
     name: 'Engineer',
     attributes: [
       AttributeCode.Electricity,
@@ -160,7 +160,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Office,
     ]
   },
-  [CitizenCode.Explorer]: {
+  [CitizenId.Explorer]: {
     name: 'Explorer',
     attributes: [
       AttributeCode.Exploration,
@@ -169,7 +169,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Space,
     ]
   },
-  [CitizenCode.FactoryWorker]: {
+  [CitizenId.FactoryWorker]: {
     name: 'Factory Worker',
     attributes: [
       AttributeCode.Industry,
@@ -178,7 +178,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Robotics,
     ]
   },
-  [CitizenCode.Farmer]: {
+  [CitizenId.Farmer]: {
     name: 'Farmer',
     attributes: [
       AttributeCode.Food,
@@ -187,7 +187,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Exploration,
     ]
   },
-  [CitizenCode.FireFighter]: {
+  [CitizenId.FireFighter]: {
     name: 'Fire Fighter',
     attributes: [
       AttributeCode.Fire,
@@ -196,7 +196,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Commerce,
     ]
   },
-  [CitizenCode.Guru]: {
+  [CitizenId.Guru]: {
     name: 'Guru',
     attributes: [
       AttributeCode.Mysticism,
@@ -205,7 +205,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Military,
     ]
   },
-  [CitizenCode.Historian]: {
+  [CitizenId.Historian]: {
     name: 'Historian',
     attributes: [
       AttributeCode.History,
@@ -214,7 +214,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Science,
     ]
   },
-  [CitizenCode.HomeOwner]: {
+  [CitizenId.HomeOwner]: {
     name: 'Home Owner',
     attributes: [
       AttributeCode.Residency,
@@ -223,7 +223,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Finance,
     ]
   },
-  [CitizenCode.Inventor]: {
+  [CitizenId.Inventor]: {
     name: 'Inventor',
     attributes: [
       AttributeCode.Technology,
@@ -232,7 +232,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Government,
     ]
   },
-  [CitizenCode.Mathematician]: {
+  [CitizenId.Mathematician]: {
     name: 'Mathematician',
     attributes: [
       AttributeCode.Mathematics,
@@ -241,7 +241,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Technology,
     ]
   },
-  [CitizenCode.Mayor]: {
+  [CitizenId.Mayor]: {
     name: 'Mayor',
     attributes: [
       AttributeCode.Government,
@@ -250,7 +250,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Military,
     ]
   },
-  [CitizenCode.Miner]: {
+  [CitizenId.Miner]: {
     name: 'Miner',
     attributes: [
       AttributeCode.Resources,
@@ -259,7 +259,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Landmark,
     ]
   },
-  [CitizenCode.Musician]: {
+  [CitizenId.Musician]: {
     name: 'Musician',
     attributes: [
       AttributeCode.Music,
@@ -268,7 +268,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Education,
     ]
   },
-  [CitizenCode.Mystic]: {
+  [CitizenId.Mystic]: {
     name: 'Mystic',
     attributes: [
       AttributeCode.Mysticism,
@@ -277,7 +277,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Animals,
     ]
   },
-  [CitizenCode.OfficeWorker]: {
+  [CitizenId.OfficeWorker]: {
     name: 'Office Worker',
     attributes: [
       AttributeCode.Office,
@@ -286,7 +286,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Books,
     ]
   },
-  [CitizenCode.Pilot]: {
+  [CitizenId.Pilot]: {
     name: 'Pilot',
     attributes: [
       AttributeCode.Air,
@@ -295,7 +295,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Resources,
     ]
   },
-  [CitizenCode.PoliceOfficer]: {
+  [CitizenId.PoliceOfficer]: {
     name: 'Police Officer',
     attributes: [
       AttributeCode.Law,
@@ -304,7 +304,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Sea,
     ]
   },
-  [CitizenCode.Robot]: {
+  [CitizenId.Robot]: {
     name: 'Robot',
     attributes: [
       AttributeCode.Robotics,
@@ -313,7 +313,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Electricity,
     ]
   },
-  [CitizenCode.Scientist]: {
+  [CitizenId.Scientist]: {
     name: 'Scientist',
     attributes: [
       AttributeCode.Science,
@@ -322,7 +322,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Mathematics,
     ]
   },
-  [CitizenCode.Shopkeeper]: {
+  [CitizenId.Shopkeeper]: {
     name: 'Shopkeeper',
     attributes: [
       AttributeCode.Commerce,
@@ -331,7 +331,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Finance,
     ]
   },
-  [CitizenCode.Soldier]: {
+  [CitizenId.Soldier]: {
     name: 'Soldier',
     attributes: [
       AttributeCode.Military,
@@ -340,7 +340,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Robotics,
     ]
   },
-  [CitizenCode.Teacher]: {
+  [CitizenId.Teacher]: {
     name: 'Teacher',
     attributes: [
       AttributeCode.Education,
@@ -349,7 +349,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Government,
     ]
   },
-  [CitizenCode.Tourist]: {
+  [CitizenId.Tourist]: {
     name: 'Tourist',
     attributes: [
       AttributeCode.Tourism,
@@ -358,7 +358,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Road,
     ]
   },
-  [CitizenCode.Writer]: {
+  [CitizenId.Writer]: {
     name: 'Writer',
     attributes: [
       AttributeCode.Books,
@@ -367,7 +367,7 @@ export const Citizens: ICitizens = {
       AttributeCode.Tourism,
     ]
   },
-  [CitizenCode.ZooKeeper]: {
+  [CitizenId.ZooKeeper]: {
     name: 'Zoo Keeper',
     attributes: [
       AttributeCode.Animals,
@@ -378,17 +378,17 @@ export const Citizens: ICitizens = {
   },
 }
 
-export const startingCitizens: CitizenCode[] = [
-  CitizenCode.Athlete,
-  CitizenCode.Doctor,
-  CitizenCode.Driver,
-  CitizenCode.Engineer,
-  CitizenCode.Farmer,
-  CitizenCode.FireFighter,
-  CitizenCode.HomeOwner,
-  CitizenCode.Mayor,
-  CitizenCode.Pilot,
-  CitizenCode.PoliceOfficer,
-  CitizenCode.Shopkeeper,
-  CitizenCode.Teacher,
+export const startingCitizens: CitizenId[] = [
+  CitizenId.Athlete,
+  CitizenId.Doctor,
+  CitizenId.Driver,
+  CitizenId.Engineer,
+  CitizenId.Farmer,
+  CitizenId.FireFighter,
+  CitizenId.HomeOwner,
+  CitizenId.Mayor,
+  CitizenId.Pilot,
+  CitizenId.PoliceOfficer,
+  CitizenId.Shopkeeper,
+  CitizenId.Teacher,
 ]

@@ -1,42 +1,46 @@
 import { useState } from 'react';
-import { CitizenCode, Citizens, startingCitizens } from './citizens';
+import { CitizenId, Citizens, startingCitizens } from './citizens';
 import { AttributeCode, Attributes } from './attributes';
 import { Amenity, District } from './districts';
 import { AmenityCode } from './amenities';
 import { Actions } from './actions';
 
+// Volume calculated by multiplying size by density and then looking up value in this dictionary
+// eg house with size of 2 and density of 4 has volume of 15
+const Volume: {[key: number]: number} = {1: 1, 2: 3, 4: 7, 8: 15, 16: 31};
+
 export default function Game(): JSX.Element {
-  const [availableCards, setAvailableCards] = useState<CitizenCode[]>([]);
-  const [cardsInHand, setCardsInHand] = useState<CitizenCode[]>([]);
-  const [discardedCards, setDiscardedCards] = useState<CitizenCode[]>([]);
-  const [selectedCards, setSelectedCards] = useState<CitizenCode[]>([]);
+  const [availableCards, setAvailableCards] = useState<CitizenId[]>([]);
+  const [cardsInHand, setCardsInHand] = useState<CitizenId[]>([]);
+  const [discardedCards, setDiscardedCards] = useState<CitizenId[]>([]);
+  const [selectedCards, setSelectedCards] = useState<CitizenId[]>([]);
   const [grid, setGrid] = useState<{[coords: string]: District}>({});
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>(undefined);
   const [selectedAction, setSelectedAction] = useState<string | undefined>(undefined);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const cardsInDeck = (): CitizenCode[] => {
+  const cardsInDeck = (): CitizenId[] => {
     return availableCards.filter(c => !cardsInHand.includes(c) && !discardedCards.includes(c));
   }
 
-  const toggleCard = (cardId: CitizenCode): void => {
+  const toggleCard = (citizenId: CitizenId): void => {
     let cards = [...selectedCards];
 
-    if (cards.includes(cardId)) {
-      cards = cards.filter(thisCard => thisCard !== cardId);
+    if (cards.includes(citizenId)) {
+      cards = cards.filter(thisCard => thisCard !== citizenId);
     } else {
-      cards.push(cardId);
+      cards.push(citizenId);
     }
 
     setSelectedCards(cards);
   }
 
   const startGame = (): void => {
-    const citizenCodes = startingCitizens.sort(() => Math.random() - 0.5);
+    const CitizenIds = startingCitizens.sort(() => Math.random() - 0.5);
 
     setAvailableCards(startingCitizens);
     setDiscardedCards([]);    
-    setCardsInHand([citizenCodes[0], citizenCodes[1], citizenCodes[2], citizenCodes[3]]);
+    setCardsInHand([CitizenIds[0], CitizenIds[1], CitizenIds[2], CitizenIds[3]]);
     setSelectedCards([]);
     setSelectedCellId(undefined);
 
@@ -45,10 +49,10 @@ export default function Game(): JSX.Element {
     grid['(-1,-1)'] = new District([]);
     grid['(1,-1)'] = new District([]);
     grid['(-2,0)'] = new District([]);
-    grid['(0,0)'] = new District([{amenityId: AmenityCode.Water, size: 1}]);
-    grid['(2,0)'] = new District([{amenityId: AmenityCode.Water, size: 2}]);
+    grid['(0,0)'] = new District([{amenityCode: AmenityCode.Water, size: 1, density: 4}]);
+    grid['(2,0)'] = new District([{amenityCode: AmenityCode.Water, size: 2, density: 2}]);
     grid['(-1,1)'] = new District([]);
-    grid['(1,1)'] = new District([{amenityId: AmenityCode.Water, size: 5}]);
+    grid['(1,1)'] = new District([{amenityCode: AmenityCode.Water, size: 4, density: 1}]);
 
     setGrid(grid);
   }
@@ -56,8 +60,8 @@ export default function Game(): JSX.Element {
   const validateCards = (): void => {
     let newErrors: string[] = [];
 
-    Object.values(CitizenCode).forEach((i: CitizenCode) => {
-      Object.values(CitizenCode).forEach((j: CitizenCode) => {
+    Object.values(CitizenId).forEach((i: CitizenId) => {
+      Object.values(CitizenId).forEach((j: CitizenId) => {
         if (i !== j) {
           const iAttributes = Citizens[i]?.attributes ?? [];
           const jAttributes = Citizens[j]?.attributes ?? [];
@@ -100,7 +104,7 @@ export default function Game(): JSX.Element {
       newErrors.push(`${Attributes[i].name} (${usedCitizens.length}) (has: ${usedCitizens.map(citizen => Citizens[citizen].name)}) (available: ${availableCitizens.map(citizen => Citizens[citizen].name)})`);
     });
 
-    Object.values(CitizenCode).forEach((i: CitizenCode) => {
+    Object.values(CitizenId).forEach((i: CitizenId) => {
       const citizen = Citizens[i];
 
       if (citizen.attributes.length !== 4) {
@@ -142,7 +146,7 @@ export default function Game(): JSX.Element {
     return count > 1 ? 'black' : 'darkgray';
   }
 
-  const discardCards = (cardCode: CitizenCode): void => {
+  const discardCards = (cardCode: CitizenId): void => {
     let newCards = cardsInHand.map(cardId => cardCode === cardId ? null : cardId);
 
     const myCardsInDeck = cardsInDeck();
@@ -160,7 +164,7 @@ export default function Game(): JSX.Element {
       }
     });
 
-    const newCardsInHand: CitizenCode[] = [];
+    const newCardsInHand: CitizenId[] = [];
 
     newCards.forEach(cardId => {
       cardId !== null && (newCardsInHand.push(cardId));
@@ -213,7 +217,34 @@ export default function Game(): JSX.Element {
     }
   });
 
-  const cardElements: JSX.Element[] = cardsInHand.map((cardId: CitizenCode, index: number) => {
+  const getVolume = (amenities: Amenity[], amenityCodes: AmenityCode[]): number => {
+    let volume: number = 0;
+
+    const matchingAmenities = amenities.filter(amenity => amenityCodes.includes(amenity.amenityCode));
+
+    matchingAmenities.forEach(amenity => {
+      volume += Volume[amenity.density * amenity.size];
+    });
+
+    return volume;
+  }
+
+  const employmentRate = (): {housingVolume: number, employmentVolume: number} => {
+    if (selectedCellId === undefined)
+      return {housingVolume: 0, employmentVolume: 0};
+
+    const cell = grid[selectedCellId];
+
+    if (cell === undefined)
+      return {housingVolume: 0, employmentVolume: 0};
+
+    const housingVolume = getVolume(cell.amenities, [AmenityCode.Housing]);
+    const employmentVolume = getVolume(cell.amenities, [AmenityCode.Commerce]);
+
+    return {housingVolume: housingVolume, employmentVolume: employmentVolume};
+  }
+
+  const cardElements: JSX.Element[] = cardsInHand.map((cardId: CitizenId, index: number) => {
     const card = Citizens[cardId];
     const nameBits = card.name.split(' ');
     const selected = selectedCards.includes(cardId);
@@ -281,18 +312,15 @@ export default function Game(): JSX.Element {
     const amenityElements: JSX.Element[] = [];
     const amenities: Amenity[] = grid[cellId].amenities;
 
-    const water = amenities.filter(amenity => amenity.amenityId === AmenityCode.Water)[0];
+    const water = amenities.filter(amenity => amenity.amenityCode === AmenityCode.Water)[0];
 
     if (water !== undefined) {
       if (water.size === 1) {
         amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80' stroke='black' fill='none' />);
       } else if (water.size === 2) {
         amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
-      } else if (water.size === 3) {
+      } else if (water.size === 4) {
         amenityElements.push(<path key={`district${cellId}water`} d='M 50,70 L 70,80 L 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
-      } else if (water.size === 5) {
-        amenityElements.push(<path key={`district${cellId}water1`} d='M 50,50 L 70,60 L 90,50 L 110,60 L 130,50 L 150,60 L 170,50 L 190,60' stroke='black' fill='none' />);
-        amenityElements.push(<path key={`district${cellId}water2`} d='M 50,70 L 70,80 L 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
       }
     }
 

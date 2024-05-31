@@ -1,8 +1,9 @@
 import { AmenityCode } from "./amenities";
 
 export interface Amenity {
-  amenityId: AmenityCode,
-  size: number,
+  amenityCode: AmenityCode,
+  size: 1 | 2 | 4,
+  density: 1 | 2 | 4,
 }
 
 export class District {
