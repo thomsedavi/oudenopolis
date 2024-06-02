@@ -4,6 +4,7 @@ export interface Amenity {
   amenityCode: AmenityCode,
   size: 1 | 2 | 4,
   density: 1 | 2 | 4,
+  attributes: string[],
 }
 
 export class District {
