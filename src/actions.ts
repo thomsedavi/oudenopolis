@@ -1,6 +1,5 @@
 import { AmenityCode } from "./amenities";
 import { AttributeCode } from "./attributes";
-import { DistrictAttributes } from "./districtAttributes";
 import { Amenity } from "./districts";
 import { EmploymentRate } from "./enums";
 

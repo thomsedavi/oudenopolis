@@ -5,11 +5,14 @@ import { Amenity, District } from './districts';
 import { AmenityCode } from './amenities';
 import { Actions, Result } from './actions';
 import { EmploymentRate } from './enums';
-import { DistrictAttributes } from './districtAttributes';
 
 // Volume calculated by multiplying size by density and then looking up value in this dictionary
 // eg house with size of 2 and density of 4 has volume of 15
 const Volume: {[key: number]: number} = {1: 1, 2: 3, 4: 7, 8: 15, 16: 31};
+const MaxLineLength: number = 42;
+const FontSize: number = 30;
+const LineSpacing: number = 40;
+const ParagraphSpacing: number = 50;
 
 export default function Game(): JSX.Element {
   const [availableCards, setAvailableCards] = useState<CitizenId[]>([]);
@@ -221,31 +224,79 @@ export default function Game(): JSX.Element {
   let actionElement: JSX.Element | undefined = undefined;
 
   if (selectedAction !== undefined) {
+    let lineBreaks = 0;
+    let paragraphBreaks = 0;
+
     const action = Actions[selectedAction];
 
-    const results: JSX.Element[] = [];
+    const descriptionElements: JSX.Element[] = [];
+
+    const description: string[] = action.description.split('\n');
+
+    description.forEach(paragraph => {
+      const words: string[] = paragraph.split(' ');
+      let line = '';
+
+      words.forEach(word => {
+        if (line === '') {
+          line = word;
+        } else if ((`${line} ${word}`).length > MaxLineLength) {
+          descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+          line = word;
+          lineBreaks++
+        } else {
+          line = `${line} ${word}`;
+        }
+      });
+
+      descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+      paragraphBreaks++;
+    });
+
+    lineBreaks++;
 
     action.results.forEach((result: Result, index: number) => {
-      let roll: string = '';
+      const resultDescription: string[] = result.description.split('\n');
+
+      let roll: string = 'ROLL ';
 
       if (result.from === result.to) {
-        roll = `Roll ${result.from}:`
+        roll = roll + `${result.from}`
       } else {
-        roll = `Roll ${result.from}-${result.to}:`
+        roll = roll + `${result.from}-${result.to}`
       }
 
-      results.push(<text key={`result${index}`} x={15} y={106 + (index * 56)} fontSize='2em' fontFamily='monospace' fill='black'>{roll} {result.description}</text>);
+      roll = roll + ':';
+
+      resultDescription.forEach((paragraph, index) => {
+        const words: string[] = paragraph.split(' ');
+        let line = index === 0 ? roll : '';
+  
+        words.forEach(word => {
+          if (line === '') {
+            line = word;
+          } else if ((`${line} ${word}`).length > MaxLineLength) {
+            descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fontWeight={600} fill='darkgray'>{line}</text>)
+            line = word;
+            lineBreaks++;
+          } else {
+            line = `${line} ${word}`;
+          }
+        });
+  
+        descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fontWeight={600} fill='darkgray'>{line}</text>) 
+        paragraphBreaks++;
+      });
     });
 
     actionElement = <g transform='translate(50 50)'>
       <rect width={800} height={900} stroke='none' fill='black' />
       <rect x={5} y={5} width={790} height={890} stroke='none' fill='white' />
-      <rect x={720} width={80} height={80} stroke='none' fill='black' />
-      <rect x={725} y={5} width={70} height={70} stroke='none' fill='white' />
-      <text x={745} y={56} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
-      <rect x={720} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedAction(undefined)} />
-      <text x={15} y={56} fontSize='2em' fontFamily='monospace' fill='black'>{action.description}</text>
-      {results}
+      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='black' />
+      <rect x={755} y={-25} width={70} height={70} stroke='none' fill='white' />
+      <text x={775} y={26} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
+      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedAction(undefined)} />
+      {descriptionElements}
       <rect x={640} y={820} width={160} height={80} stroke='none' fill='black' />
       <rect x={645} y={825} width={150} height={70} stroke='none' fill='white' />
       <text x={665} y={876} fontSize='4em' fontFamily='monospace' fill='black'>ROLL</text>
@@ -256,11 +307,38 @@ export default function Game(): JSX.Element {
   let informationElement: JSX.Element | undefined = undefined;
 
   if (rollResults !== undefined) {
+    let lineBreaks = 0;
+    let paragraphBreaks = 0;
+
+    const descriptionElements: JSX.Element[] = [];
+
+    const description: string[] = rollResults.description.split('\n');
+
+    description.forEach(paragraph => {
+      const words: string[] = paragraph.split(' ');
+      let line = '';
+
+      words.forEach(word => {
+        if (line === '') {
+          line = word;
+        } else if ((`${line} ${word}`).length > MaxLineLength) {
+          descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+          line = word;
+          lineBreaks++
+        } else {
+          line = `${line} ${word}`;
+        }
+      });
+
+      descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+      paragraphBreaks++;
+    });
+
     actionElement = <g transform='translate(50 50)'>
       <rect width={800} height={900} stroke='none' fill='black' />
       <rect x={5} y={5} width={790} height={890} stroke='none' fill='white' />
-      <text x={15} y={56} fontSize='2em' fontFamily='monospace' fill='black'>{rollResults.description}</text>
-      <text x={15} y={156} fontSize='2em' fontFamily='monospace' fill='black'>{rollResults.dice}</text>
+      {descriptionElements}
+      <text x={34} y={856} fontSize='2em' fontFamily='monospace' fill='black'>{rollResults.dice}</text>
       <rect x={720} width={80} height={80} stroke='none' fill='black' />
       <rect x={725} y={5} width={70} height={70} stroke='none' fill='white' />
       <text x={745} y={56} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
