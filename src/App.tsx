@@ -19,7 +19,7 @@ export default function Game(): JSX.Element {
   const [grid, setGrid] = useState<{[coords: string]: District}>({});
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>(undefined);
   const [selectedAction, setSelectedAction] = useState<string | undefined>(undefined);
-  const [rollResults, setRollResults] = useState<{description: string, dice1: number, dice2: number} | undefined>(undefined);
+  const [rollResults, setRollResults] = useState<{description: string, dice: number} | undefined>(undefined);
   const [errors, setErrors] = useState<string[]>([]);
 
   const cardsInDeck = (): CitizenId[] => {
@@ -55,12 +55,34 @@ export default function Game(): JSX.Element {
     grid['(-1,-1)'] = new District([]);
     grid['(1,-1)'] = new District([]);
     grid['(-2,0)'] = new District([]);
-    grid['(0,0)'] = new District([{amenityCode: AmenityCode.Water, size: 1, density: 4, attributes: []}]);
-    grid['(2,0)'] = new District([{amenityCode: AmenityCode.Water, size: 2, density: 2, attributes: []}]);
+    grid['(0,0)'] = new District([{amenityCode: AmenityCode.Water, size: 1, density: 4}]);
+    grid['(2,0)'] = new District([{amenityCode: AmenityCode.Water, size: 2, density: 2}]);
     grid['(-1,1)'] = new District([]);
-    grid['(1,1)'] = new District([{amenityCode: AmenityCode.Water, size: 4, density: 1, attributes: []}]);
+    grid['(1,1)'] = new District([{amenityCode: AmenityCode.Water, size: 4, density: 1}]);
 
     setGrid(grid);
+  }
+
+  const startNewDay = (): void => {
+    const CitizenIds = availableCards.sort(() => Math.random() - 0.5);
+
+    setDiscardedCards([]);    
+    setCardsInHand([CitizenIds[0], CitizenIds[1], CitizenIds[2], CitizenIds[3]]);
+    setSelectedCards([]);
+    setRollResults(undefined);
+    setSelectedAction(undefined);
+
+    const newgrid = {...grid};
+
+    Object.keys(newgrid).forEach(key => {
+      newgrid[key].amenities.forEach(amenity => {
+        if ([AmenityCode.Housing].includes(amenity.amenityCode)) {
+          amenity.age = amenity.age !== undefined ? amenity.age + 1 : 1;
+        }
+      });
+    });
+
+    setGrid(newgrid);
   }
 
   const validateCards = (): void => {
@@ -237,13 +259,12 @@ export default function Game(): JSX.Element {
     actionElement = <g transform='translate(50 50)'>
       <rect width={800} height={900} stroke='none' fill='black' />
       <rect x={5} y={5} width={790} height={890} stroke='none' fill='white' />
+      <text x={15} y={56} fontSize='2em' fontFamily='monospace' fill='black'>{rollResults.description}</text>
+      <text x={15} y={156} fontSize='2em' fontFamily='monospace' fill='black'>{rollResults.dice}</text>
       <rect x={720} width={80} height={80} stroke='none' fill='black' />
       <rect x={725} y={5} width={70} height={70} stroke='none' fill='white' />
       <text x={745} y={56} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
       <rect x={720} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setRollResults(undefined)} />
-      <text x={15} y={56} fontSize='2em' fontFamily='monospace' fill='black'>{rollResults.description}</text>
-      <text x={15} y={156} fontSize='2em' fontFamily='monospace' fill='black'>{rollResults.dice1}</text>
-      <text x={45} y={156} fontSize='2em' fontFamily='monospace' fill='black'>{rollResults.dice2}</text>
     </g>;
   }
 
@@ -252,11 +273,9 @@ export default function Game(): JSX.Element {
 
     const action = Actions[selectedAction];
 
-    const dice1: number = Math.floor(Math.random() * 6) + 1;
-    const dice2: number = Math.floor(Math.random() * 6) + 1;
-    const diceRoll = dice1 + dice2;
+    const dice: number = Math.floor(Math.random() * 6) + 1;
 
-    let outcome: Result | undefined = action.results.filter(result => result.from <= diceRoll && result.to >= diceRoll)[0];
+    let outcome: Result | undefined = action.results.filter(result => result.from <= dice && result.to >= dice)[0];
 
     if (outcome !== undefined) {
       if (selectedCellId !== undefined) {
@@ -264,7 +283,7 @@ export default function Game(): JSX.Element {
 
         cell.amenities.push(outcome.amenity);
 
-        setRollResults({description: outcome.resultDescription, dice1: dice1, dice2: dice2});
+        setRollResults({description: outcome.resultDescription, dice: dice});
         discardCards([...selectedCards]);
       }
     }
@@ -285,7 +304,7 @@ export default function Game(): JSX.Element {
     const housingVolume = getVolume(cell.amenities, [AmenityCode.Housing]);
     const employmentVolume = getVolume(cell.amenities, [AmenityCode.Commerce]);
   
-    if (housingVolume == 0 && employmentVolume == 0)
+    if (housingVolume === 0 && employmentVolume === 0)
       return EmploymentRate.NotApplicable;
   
     if (housingVolume < employmentVolume)
@@ -429,10 +448,20 @@ export default function Game(): JSX.Element {
 
     if (housing !== undefined) {
       if (housing.size === 1) {
-        if (housing.attributes.includes(DistrictAttributes.Abandoned)) {
-          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='none' />);
-        } else if (housing.attributes.includes(DistrictAttributes.Occupied)) {
+        if (housing.usage === 'LOW') {
+          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='lightgray' />);
+        } else if (housing.usage === 'MEDIUM') {
+          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='darkgray' />);
+        } else {
           amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='black' />);
+        }
+      } else if (housing.size === 2) {
+        if (housing.usage === 'LOW') {
+          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={40} height={20} strokeWidth={1} stroke='black' fill='lightgray' />);
+        } else if (housing.usage === 'MEDIUM') {
+          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={40} height={20} strokeWidth={1} stroke='black' fill='darkgray' />);
+        } else {
+          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={40} height={20} strokeWidth={1} stroke='black' fill='black' />);
         }
       }
     }
@@ -485,6 +514,7 @@ export default function Game(): JSX.Element {
         </svg>
       </div>
       <button onClick={() => startGame()}>Start Game</button>
+      <button onClick={() => startNewDay()}>Start New Day</button>
       {false && <button onClick={() => validateCards()}>Validate Cards</button>}
       {errors.map((error: string, i: number) => <div key={`error${i}`}>{error}</div>)}
     </>

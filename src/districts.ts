@@ -4,7 +4,8 @@ export interface Amenity {
   amenityCode: AmenityCode,
   size: 1 | 2 | 4,
   density: 1 | 2 | 4,
-  attributes: string[],
+  usage?: 'LOW' | 'MEDIUM' | 'HIGH',
+  age?: number,
 }
 
 export class District {
