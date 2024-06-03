@@ -22,7 +22,7 @@ export default function Game(): JSX.Element {
   const [grid, setGrid] = useState<{[coords: string]: District}>({});
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>(undefined);
   const [selectedAction, setSelectedAction] = useState<string | undefined>(undefined);
-  const [rollResults, setRollResults] = useState<{description: string, dice: number} | undefined>(undefined);
+  const [rollResults, setRollResults] = useState<{description: string, dice: number, rotation: number} | undefined>(undefined);
   const [errors, setErrors] = useState<string[]>([]);
 
   const cardsInDeck = (): CitizenId[] => {
@@ -307,7 +307,7 @@ export default function Game(): JSX.Element {
   let informationElement: JSX.Element | undefined = undefined;
 
   if (rollResults !== undefined) {
-    let lineBreaks = 0;
+    let lineBreaks = 5;
     let paragraphBreaks = 0;
 
     const descriptionElements: JSX.Element[] = [];
@@ -334,11 +334,36 @@ export default function Game(): JSX.Element {
       paragraphBreaks++;
     });
 
+    const diceElements: JSX.Element[] = [];
+
+    diceElements.push(<rect key='thedice' width={120} height={120} rx={10} strokeWidth={3} stroke='black' fill='none' />);
+
+    if ([1, 3, 5].includes(rollResults.dice)) {
+      diceElements.push(<circle key='thedice1' cx={60} cy={60} r={10} strokeWidth={3} stroke='black' fill='black' />);
+    }
+
+    if ([2, 3, 4, 5, 6].includes(rollResults.dice)) {
+      diceElements.push(<circle key='thedice2' cx={30} cy={30} r={10} strokeWidth={3} stroke='black' fill='black' />);
+      diceElements.push(<circle key='thedice3' cx={90} cy={90} r={10} strokeWidth={3} stroke='black' fill='black' />);
+    }
+
+    if ([4, 5, 6].includes(rollResults.dice)) {
+      diceElements.push(<circle key='thedice4' cx={30} cy={90} r={10} strokeWidth={3} stroke='black' fill='black' />);
+      diceElements.push(<circle key='thedice5' cx={90} cy={30} r={10} strokeWidth={3} stroke='black' fill='black' />);
+    }
+
+    if (rollResults.dice === 6) {
+      diceElements.push(<circle key='thedice6' cx={30} cy={60} r={10} strokeWidth={3} stroke='black' fill='black' />);
+      diceElements.push(<circle key='thedice7' cx={90} cy={60} r={10} strokeWidth={3} stroke='black' fill='black' />);
+    }
+
+    const diceElement: JSX.Element = <g transform={` translate(340 50) rotate(${rollResults.rotation * 360} 60 60)`}>{diceElements}</g>;
+
     actionElement = <g transform='translate(50 50)'>
       <rect width={800} height={900} stroke='none' fill='black' />
       <rect x={5} y={5} width={790} height={890} stroke='none' fill='white' />
+      {diceElement}
       {descriptionElements}
-      <text x={34} y={856} fontSize='2em' fontFamily='monospace' fill='black'>{rollResults.dice}</text>
       <rect x={720} width={80} height={80} stroke='none' fill='black' />
       <rect x={725} y={5} width={70} height={70} stroke='none' fill='white' />
       <text x={745} y={56} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
@@ -361,7 +386,7 @@ export default function Game(): JSX.Element {
 
         cell.amenities.push(outcome.amenity);
 
-        setRollResults({description: outcome.resultDescription, dice: dice});
+        setRollResults({description: outcome.resultDescription, dice: dice, rotation: Math.random()});
         discardCards([...selectedCards]);
       }
     }
