@@ -9,9 +9,11 @@ export interface Amenity {
 }
 
 export class District {
+  name: string;
   amenities: Amenity[];
 
-  constructor(amenities: Amenity[]) {
+  constructor(name: string, amenities: Amenity[]) {
+    this.name = name;
     this.amenities = amenities;
   }
 }

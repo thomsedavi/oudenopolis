@@ -11,8 +11,8 @@ import { EmploymentRate } from './enums';
 const Volume: {[key: number]: number} = {1: 1, 2: 3, 4: 7, 8: 15, 16: 31};
 const MaxLineLength: number = 42;
 const FontSize: number = 30;
-const LineSpacing: number = 40;
-const ParagraphSpacing: number = 50;
+const LineSpacing: number = 38;
+const ParagraphSpacing: number = 52;
 
 export default function Game(): JSX.Element {
   const [availableCards, setAvailableCards] = useState<CitizenId[]>([]);
@@ -23,6 +23,7 @@ export default function Game(): JSX.Element {
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>(undefined);
   const [selectedAction, setSelectedAction] = useState<string | undefined>(undefined);
   const [rollResults, setRollResults] = useState<{description: string, dice: number, rotation: number} | undefined>(undefined);
+  const [inspectDistrict, setInspectDistrict] = useState<boolean>(false);
   const [errors, setErrors] = useState<string[]>([]);
 
   const cardsInDeck = (): CitizenId[] => {
@@ -55,13 +56,13 @@ export default function Game(): JSX.Element {
 
     const grid: {[coords: string]: District} = {};
 
-    grid['(-1,-1)'] = new District([]);
-    grid['(1,-1)'] = new District([]);
-    grid['(-2,0)'] = new District([]);
-    grid['(0,0)'] = new District([{amenityCode: AmenityCode.Water, size: 1, density: 4}]);
-    grid['(2,0)'] = new District([{amenityCode: AmenityCode.Water, size: 2, density: 2}]);
-    grid['(-1,1)'] = new District([]);
-    grid['(1,1)'] = new District([{amenityCode: AmenityCode.Water, size: 4, density: 1}]);
+    grid['(-1,-1)'] = new District('Hartburn', []);
+    grid['(1,-1)'] = new District('Wallington', []);
+    grid['(-2,0)'] = new District('Rothley', []);
+    grid['(0,0)'] = new District('Meldon', [{amenityCode: AmenityCode.Water, size: 1, density: 4}]);
+    grid['(2,0)'] = new District('Pigdon', [{amenityCode: AmenityCode.Water, size: 2, density: 2}]);
+    grid['(-1,1)'] = new District('Nunnykirk', []);
+    grid['(1,1)'] = new District('Pegswood', [{amenityCode: AmenityCode.Water, size: 4, density: 1}]);
 
     setGrid(grid);
   }
@@ -255,7 +256,7 @@ export default function Game(): JSX.Element {
 
     lineBreaks++;
 
-    action.results.forEach((result: Result, index: number) => {
+    action.results.forEach((result: Result) => {
       const resultDescription: string[] = result.description.split('\n');
 
       let roll: string = 'ROLL ';
@@ -304,7 +305,88 @@ export default function Game(): JSX.Element {
     </g>;
   }
 
-  let informationElement: JSX.Element | undefined = undefined;
+  if (inspectDistrict && selectedCellId !== undefined) {
+    const district = grid[selectedCellId];
+
+    const descriptionElements: JSX.Element[] = [];
+
+    descriptionElements.push(<text key={`districtname`} x={34} y={56} fontSize={FontSize} fontFamily='monospace' fontWeight={600} textDecoration='underline'>{district.name}</text>);
+
+    let lineBreaks = 2;
+    let paragraphBreaks = 0;
+
+    const descriptions: string[] = [];
+
+    if (district.amenities.length === 0) {
+      descriptions.push('A bunch of unused land');
+    } else {
+      descriptions.push('Put some generic information here, maybe about land usage nature vs built up or something');
+
+      district.amenities.forEach(amenity => {
+        const size = amenity.size === 1 ? 'small' : (amenity.size === 2 ? 'medium' : 'large');
+
+        let amenityName = 'unknown';
+
+        if (amenity.amenityCode === AmenityCode.Water) {
+          amenityName = 'water';
+        } else if (amenity.amenityCode === AmenityCode.Housing) {
+          amenityName = 'housing';
+        }
+
+        let density = 'averagely';
+
+        if (amenity.density === 1) {
+          density = 'lightly';
+        } else if (amenity.density === 4) {
+          density = 'heavily';
+        }
+
+        let usage = 'medium';
+
+        if (amenity.usage === 'LOW') {
+          usage = 'low';
+        } else if (amenity.usage === 'HIGH') {
+          usage = 'high';
+        }
+
+        descriptions.push(`A ${size}, ${density} built, ${amenity.age ?? 0} month old ${amenityName} with ${usage} usage`)
+      });
+    }
+
+    descriptions.forEach((description: string) => {
+      const resultDescription: string[] = description.split('\n');
+
+      resultDescription.forEach((paragraph, index) => {
+        const words: string[] = paragraph.split(' ');
+        let line = '';
+  
+        words.forEach(word => {
+          if (line === '') {
+            line = word;
+          } else if ((`${line} ${word}`).length > MaxLineLength) {
+            descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+            line = word;
+            lineBreaks++;
+          } else {
+            line = `${line} ${word}`;
+          }
+        });
+  
+        descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>) 
+        paragraphBreaks++;
+      });
+    });
+
+    actionElement = <g transform='translate(50 50)'>
+      <rect width={800} height={900} stroke='none' fill='black' />
+      <rect x={5} y={5} width={790} height={890} stroke='none' fill='white' />
+      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='black' />
+      <rect x={755} y={-25} width={70} height={70} stroke='none' fill='white' />
+      <text x={775} y={26} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
+      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setInspectDistrict(value => !value)} />
+      {descriptionElements}
+    </g>;
+  }
 
   if (rollResults !== undefined) {
     let lineBreaks = 5;
@@ -530,7 +612,7 @@ export default function Game(): JSX.Element {
     </g>;
   });
 
-  const mapElements: JSX.Element[] = Object.keys(grid).map(cellId => {
+  const mapElements: JSX.Element[] = Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).map(cellId => {
     const coords = cellId.substring(1, cellId.length - 1).split(',');
 
     const amenityElements: JSX.Element[] = [];
@@ -574,6 +656,12 @@ export default function Game(): JSX.Element {
       <rect width='200' height='100' stroke={selectedCellId === cellId ? 'black' : 'darkgray'} fill='none' />
       {amenityElements}
       <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedCellId(prevCellId => prevCellId === cellId ? undefined : cellId)} />
+      {selectedCellId === cellId && <>
+        <rect x={160} y={-40} width={80} height={80} stroke='none' fill='black' />
+        <rect x={165} y={-35} width={70} height={70} stroke='none' fill='white' />
+        <text x={180} y={30} fontFamily='monospace' fontSize={80}>?</text>
+        <rect x={160} y={-40} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setInspectDistrict(prev => !prev)} />
+      </>}
     </g>;
   })
 
@@ -612,7 +700,6 @@ export default function Game(): JSX.Element {
           {actionElements}
           {mapElements}
           {actionElement}
-          {informationElement}
           {cardElements}
         </svg>
       </div>
