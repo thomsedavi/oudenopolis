@@ -4,4 +4,5 @@ export enum AmenityCode {
   Wharf = '2-37',
   Commerce = '7-40',
   Road = '5-98',
+  Medical = '1-27',
 }

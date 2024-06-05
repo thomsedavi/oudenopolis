@@ -5,7 +5,8 @@ import { Amenity, District } from './districts';
 import { AmenityCode } from './amenities';
 import { Action, DistrictState, Result } from './actions';
 import { EmploymentRate } from './enums';
-import { getResidencySmall } from './actions/residency';
+import { getCreateResidencySmall } from './actions/residency';
+import { getCreateHealthSmall } from './actions/health';
 
 // Volume calculated by multiplying size by density and then looking up value in this dictionary
 // eg house with size of 2 and density of 4 has volume of 15
@@ -55,7 +56,7 @@ export default function Game(): JSX.Element {
       return EmploymentRate.Medium;
     
     const housingVolume = getVolume(cell.amenities, [AmenityCode.Housing]);
-    const employmentVolume = getVolume(cell.amenities, [AmenityCode.Commerce]);
+    const employmentVolume = getVolume(cell.amenities, [AmenityCode.Commerce, AmenityCode.Medical]);
     
     if (housingVolume === 0 && employmentVolume === 0)
       return EmploymentRate.Medium;
@@ -83,6 +84,7 @@ export default function Game(): JSX.Element {
     });
 
     const residencyCount = cards.filter(cardId => Citizens[cardId].attributes.includes(AttributeCode.Residency)).length;
+    const healthCount = cards.filter(cardId => Citizens[cardId].attributes.includes(AttributeCode.Health)).length;
 
     const newAvailableActions: Action[] = [];
 
@@ -91,7 +93,11 @@ export default function Game(): JSX.Element {
     }
 
     if (residencyCount >= 2 && availableSpace >= 1) {
-      newAvailableActions.push(getResidencySmall(districtState));
+      newAvailableActions.push(getCreateResidencySmall(districtState));
+    }
+
+    if (healthCount >= 2 && availableSpace >= 1) {
+      newAvailableActions.push(getCreateHealthSmall(districtState));
     }
 
     setAvailableActions(newAvailableActions);
@@ -552,25 +558,25 @@ export default function Game(): JSX.Element {
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[0])).length > 1) {
       attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[0])} fill={getAttributeFill(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeFill(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute0 = [<path strokeWidth='0.04' stroke='lightgray' fill='none' key={`card${index}path0`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[1])).length > 1) {
       attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[1])} fill={getAttributeFill(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeFill(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute1 = [<path strokeWidth='0.04' stroke='lightgray' fill='none' key={`card${index}path1`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[2])).length > 1) {
       attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[2])} fill={getAttributeFill(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeFill(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute2 = [<path strokeWidth='0.04' stroke='lightgray' fill='none' key={`card${index}path2`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[3])).length > 1) {
       attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[3])} fill={getAttributeFill(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke='lightgray' fill={getAttributeFill(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute3 = [<path strokeWidth='0.04' stroke='lightgray' fill='none' key={`card${index}path3`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
     }
 
     return <g key={`card${index}`} transform={`translate(${120 + (index * 220)} ${selected ? 1395 : 1400}) scale(2.3)`}>
@@ -610,6 +616,7 @@ export default function Game(): JSX.Element {
     const water = amenities.filter(amenity => amenity.code === AmenityCode.Water)[0];
     const road = amenities.filter(amenity => amenity.code === AmenityCode.Road)[0];
     const housing = amenities.filter(amenity => amenity.code === AmenityCode.Housing)[0];
+    const medical = amenities.filter(amenity => amenity.code === AmenityCode.Medical)[0];
 
     if (water !== undefined) {
       if (water.size === 1) {
@@ -623,7 +630,7 @@ export default function Game(): JSX.Element {
 
     if (road !== undefined) {
       if (road.size === 1) {
-        amenityElements.push(<line x1={50} x2={150} y1={50} y2={50} stroke='black' strokeWidth={1} />);
+        amenityElements.push(<line key={`district${cellId}road`} x1={50} x2={150} y1={50} y2={50} stroke='black' strokeWidth={1} />);
       }
     }
 
@@ -636,19 +643,22 @@ export default function Game(): JSX.Element {
         } else {
           amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='black' />);
         }
-      } else if (housing.size === 2) {
-        if (housing.usage === 'LOW') {
-          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={40} height={20} strokeWidth={1} stroke='black' fill='lightgray' />);
-        } else if (housing.usage === 'MEDIUM') {
-          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={40} height={20} strokeWidth={1} stroke='black' fill='darkgray' />);
+      }
+    }
+
+    if (medical !== undefined) {
+      if (medical.size === 1) {
+        if (medical.usage === 'LOW') {
+          amenityElements.push(<rect key={`district${cellId}medical`} x={120} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='lightgray' />);
+        } else if (medical.usage === 'MEDIUM') {
+          amenityElements.push(<rect key={`district${cellId}medical`} x={120} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='darkgray' />);
         } else {
-          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={40} height={20} strokeWidth={1} stroke='black' fill='black' />);
+          amenityElements.push(<rect key={`district${cellId}medical`} x={120} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='black' />);
         }
       }
     }
 
-
-    return <g key={`district${cellId}`} transform={`translate(${350 + (Number(coords[0]) * 100)} ${675 + (Number(coords[1]) * 100)})`}>
+    return <g key={`district${cellId}`} transform={`translate(${150 + (Number(coords[0]) * 100)} ${675 + (Number(coords[1]) * 100)}) scale(3)`}>
       <rect width='200' height='100' stroke={selectedCellId === cellId ? 'black' : 'darkgray'} fill='none' />
       {amenityElements}
       <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => updateSelectedCell(cellId)} />

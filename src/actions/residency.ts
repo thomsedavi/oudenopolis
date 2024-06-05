@@ -2,7 +2,7 @@ import { Action, DistrictState, Result } from "../actions";
 import { AmenityCode } from "./../amenities";
 import { EmploymentRate } from "./../enums";
 
-export const getResidencySmall = (districtState: DistrictState): Action => {
+export const getCreateResidencySmall = (districtState: DistrictState): Action => {
   const lowResult: Result = {
     type: 'CREATE',
     amenity: {code: AmenityCode.Housing, size: 1, density: 1, usage: 'LOW'},
