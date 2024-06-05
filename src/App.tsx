@@ -39,19 +39,16 @@ export default function Game(): JSX.Element {
     const matchingAmenities = amenities.filter(amenity => amenityCodes.includes(amenity.code));
 
     matchingAmenities.forEach(amenity => {
-      volume += Volume[amenity.density * amenity.size];
+      volume += Volume[(amenity.density ?? 0) * (amenity.size ?? 0)];
     });
 
     return volume;
   }
 
   // TODO this should also depend on nearby districts, also have a better balance like one home to every two employers
-  const getEmploymentRate = (): EmploymentRate => {
-    if (selectedCellId === undefined)
-      return EmploymentRate.Medium;
-    
-    const cell = grid[selectedCellId];
-    
+  const getEmploymentRate = (cellId: string): EmploymentRate => {
+    const cell = grid[cellId];
+
     if (cell === undefined)
       return EmploymentRate.Medium;
     
@@ -60,15 +57,12 @@ export default function Game(): JSX.Element {
     
     if (housingVolume === 0 && employmentVolume === 0)
       return EmploymentRate.Medium;
-    
-    if (housingVolume < employmentVolume)
+
+    const ratio = employmentVolume / (housingVolume * 2);
+
+    if (ratio >= 19 / 20)
       return EmploymentRate.High;
-    
-    const ratio = employmentVolume / housingVolume;
-    
-    if (ratio > 2 / 3)
-      return EmploymentRate.High;
-    else if (ratio > 1 / 3)
+    else if (ratio >= 9 / 10)
       return EmploymentRate.Medium;
     else
       return EmploymentRate.Low;
@@ -80,7 +74,7 @@ export default function Game(): JSX.Element {
     const selectedCell = grid[cellId];
 
     selectedCell.amenities.forEach(amenity => {
-      availableSpace -= amenity.size;
+      availableSpace -= amenity.size ?? 0;
     });
 
     const residencyCount = cards.filter(cardId => Citizens[cardId].attributes.includes(AttributeCode.Residency)).length;
@@ -89,7 +83,7 @@ export default function Game(): JSX.Element {
     const newAvailableActions: Action[] = [];
 
     const districtState: DistrictState = {
-      employmentRate: getEmploymentRate()
+      employmentRate: getEmploymentRate(cellId)
     }
 
     if (residencyCount >= 2 && availableSpace >= 1) {
@@ -140,7 +134,7 @@ export default function Game(): JSX.Element {
 
     const grid: {[coords: string]: District} = {};
 
-    grid['(0,0)'] = new District('Meldon', [{code: AmenityCode.Water, size: 1, density: 4}, {code: AmenityCode.Road, size: 1, density: 0}]);
+    grid['(0,0)'] = new District('Meldon', [{code: AmenityCode.Water, size: 1, density: 4}, {code: AmenityCode.Road}]);
 
     setGrid(grid);
   }
@@ -154,6 +148,7 @@ export default function Game(): JSX.Element {
     setRollResults(undefined);
     setSelectedActionIndex(undefined);
     setSelectedCellId(undefined);
+    setAvailableActions([]);
 
     const newgrid = {...grid};
 

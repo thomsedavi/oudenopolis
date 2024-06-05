@@ -1,4 +1,5 @@
 import { Action, DistrictState, Result } from "../actions";
+import { EmploymentRate } from "../enums";
 import { AmenityCode } from "./../amenities";
 
 export const getCreateHealthSmall = (districtState: DistrictState): Action => {
@@ -29,10 +30,10 @@ export const getCreateHealthSmall = (districtState: DistrictState): Action => {
     cardRequirements: [],
     results: [
       {roll: 1, ...lowResult},
-      {roll: 2, ...lowResult},
-      {roll: 3, ...mediumResult},
-      {roll: 4, ...mediumResult},
-      {roll: 5, ...highResult},
+      {roll: 2, ...(districtState.employmentRate === EmploymentRate.Low ? mediumResult : lowResult)},
+      {roll: 3, ...(districtState.employmentRate === EmploymentRate.High ? lowResult : mediumResult)},
+      {roll: 4, ...(districtState.employmentRate === EmploymentRate.Low ? highResult : mediumResult)},
+      {roll: 5, ...(districtState.employmentRate === EmploymentRate.High ? mediumResult : highResult)},
       {roll: 6, ...highResult}],
   };
 }

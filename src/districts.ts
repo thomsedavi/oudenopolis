@@ -2,8 +2,8 @@ import { AmenityCode } from "./amenities";
 
 export interface Amenity {
   code: AmenityCode,
-  size: 1 | 2 | 4,
-  density: 0 | 1 | 2 | 4,
+  size?: 1 | 2 | 4,
+  density?: 1 | 2 | 4,
   usage?: 'LOW' | 'MEDIUM' | 'HIGH',
   age?: number,
 }
