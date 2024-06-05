@@ -380,15 +380,15 @@ export const Citizens: ICitizens = {
 
 export const startingCitizens: CitizenId[] = [
   CitizenId.Athlete,
-  CitizenId.Doctor,
-  CitizenId.Driver,
-  CitizenId.Engineer,
-  CitizenId.Farmer,
+  //CitizenId.Doctor,
+  //CitizenId.Driver,
+  //CitizenId.Engineer,
+  //CitizenId.Farmer,
   CitizenId.FireFighter,
   CitizenId.HomeOwner,
   CitizenId.Mayor,
-  CitizenId.Pilot,
-  CitizenId.PoliceOfficer,
-  CitizenId.Shopkeeper,
-  CitizenId.Teacher,
+  //CitizenId.Pilot,
+  //CitizenId.PoliceOfficer,
+  //CitizenId.Shopkeeper,
+  //CitizenId.Teacher,
 ]

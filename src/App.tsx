@@ -3,8 +3,9 @@ import { CitizenId, Citizens, startingCitizens } from './citizens';
 import { AttributeCode, Attributes } from './attributes';
 import { Amenity, District } from './districts';
 import { AmenityCode } from './amenities';
-import { Actions, Result } from './actions';
+import { Action, DistrictState, Result } from './actions';
 import { EmploymentRate } from './enums';
+import { getResidencySmall } from './actions/residency';
 
 // Volume calculated by multiplying size by density and then looking up value in this dictionary
 // eg house with size of 2 and density of 4 has volume of 15
@@ -21,13 +22,79 @@ export default function Game(): JSX.Element {
   const [selectedCards, setSelectedCards] = useState<CitizenId[]>([]);
   const [grid, setGrid] = useState<{[coords: string]: District}>({});
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>(undefined);
-  const [selectedAction, setSelectedAction] = useState<string | undefined>(undefined);
+  const [availableActions, setAvailableActions] = useState<Action[]>([]);
+  const [selectedActionIndex, setSelectedActionIndex] = useState<number | undefined>(undefined);
   const [rollResults, setRollResults] = useState<{description: string, dice: number, rotation: number} | undefined>(undefined);
   const [inspectDistrict, setInspectDistrict] = useState<boolean>(false);
   const [errors, setErrors] = useState<string[]>([]);
 
   const cardsInDeck = (): CitizenId[] => {
     return availableCards.filter(c => !cardsInHand.includes(c) && !discardedCards.includes(c));
+  }
+
+  const getVolume = (amenities: Amenity[], amenityCodes: AmenityCode[]): number => {
+    let volume: number = 0;
+
+    const matchingAmenities = amenities.filter(amenity => amenityCodes.includes(amenity.code));
+
+    matchingAmenities.forEach(amenity => {
+      volume += Volume[amenity.density * amenity.size];
+    });
+
+    return volume;
+  }
+
+  // TODO this should also depend on nearby districts, also have a better balance like one home to every two employers
+  const getEmploymentRate = (): EmploymentRate => {
+    if (selectedCellId === undefined)
+      return EmploymentRate.Medium;
+    
+    const cell = grid[selectedCellId];
+    
+    if (cell === undefined)
+      return EmploymentRate.Medium;
+    
+    const housingVolume = getVolume(cell.amenities, [AmenityCode.Housing]);
+    const employmentVolume = getVolume(cell.amenities, [AmenityCode.Commerce]);
+    
+    if (housingVolume === 0 && employmentVolume === 0)
+      return EmploymentRate.Medium;
+    
+    if (housingVolume < employmentVolume)
+      return EmploymentRate.High;
+    
+    const ratio = employmentVolume / housingVolume;
+    
+    if (ratio > 2 / 3)
+      return EmploymentRate.High;
+    else if (ratio > 1 / 3)
+      return EmploymentRate.Medium;
+    else
+      return EmploymentRate.Low;
+  }
+
+  const reloadAvailableActions = (cellId: string, cards: CitizenId[]): void => {
+    let availableSpace = 7;
+
+    const selectedCell = grid[cellId];
+
+    selectedCell.amenities.forEach(amenity => {
+      availableSpace -= amenity.size;
+    });
+
+    const residencyCount = cards.filter(cardId => Citizens[cardId].attributes.includes(AttributeCode.Residency)).length;
+
+    const newAvailableActions: Action[] = [];
+
+    const districtState: DistrictState = {
+      employmentRate: getEmploymentRate()
+    }
+
+    if (residencyCount >= 2 && availableSpace >= 1) {
+      newAvailableActions.push(getResidencySmall(districtState));
+    }
+
+    setAvailableActions(newAvailableActions);
   }
 
   const toggleCard = (citizenId: CitizenId): void => {
@@ -40,7 +107,18 @@ export default function Game(): JSX.Element {
     }
 
     setSelectedCards(cards);
-    setSelectedAction(undefined);
+    setSelectedActionIndex(undefined);
+    selectedCellId !== undefined && reloadAvailableActions(selectedCellId, cards);
+  }
+
+  const updateSelectedCell = (cellId: string): void => {
+    if (selectedCellId === cellId) {
+      setSelectedCellId(undefined);
+      setAvailableActions([]);
+    } else {
+      setSelectedCellId(cellId);
+      reloadAvailableActions(cellId, selectedCards);
+    }
   }
 
   const startGame = (): void => {
@@ -52,17 +130,11 @@ export default function Game(): JSX.Element {
     setSelectedCards([]);
     setSelectedCellId(undefined);
     setRollResults(undefined);
-    setSelectedAction(undefined);
+    setSelectedActionIndex(undefined);
 
     const grid: {[coords: string]: District} = {};
 
-    grid['(-1,-1)'] = new District('Hartburn', []);
-    grid['(1,-1)'] = new District('Wallington', []);
-    grid['(-2,0)'] = new District('Rothley', []);
-    grid['(0,0)'] = new District('Meldon', [{amenityCode: AmenityCode.Water, size: 1, density: 4}]);
-    grid['(2,0)'] = new District('Pigdon', [{amenityCode: AmenityCode.Water, size: 2, density: 2}]);
-    grid['(-1,1)'] = new District('Nunnykirk', []);
-    grid['(1,1)'] = new District('Pegswood', [{amenityCode: AmenityCode.Water, size: 4, density: 1}]);
+    grid['(0,0)'] = new District('Meldon', [{code: AmenityCode.Water, size: 1, density: 4}, {code: AmenityCode.Road, size: 1, density: 0}]);
 
     setGrid(grid);
   }
@@ -74,13 +146,14 @@ export default function Game(): JSX.Element {
     setCardsInHand([CitizenIds[0], CitizenIds[1], CitizenIds[2], CitizenIds[3]]);
     setSelectedCards([]);
     setRollResults(undefined);
-    setSelectedAction(undefined);
+    setSelectedActionIndex(undefined);
+    setSelectedCellId(undefined);
 
     const newgrid = {...grid};
 
     Object.keys(newgrid).forEach(key => {
       newgrid[key].amenities.forEach(amenity => {
-        if ([AmenityCode.Housing].includes(amenity.amenityCode)) {
+        if ([AmenityCode.Housing].includes(amenity.code)) {
           amenity.age = amenity.age !== undefined ? amenity.age + 1 : 1;
         }
       });
@@ -208,27 +281,14 @@ export default function Game(): JSX.Element {
   }
 
   const actionElements: JSX.Element[] = [];
-  let actionIndex = 0;
-
-  const getVolume = (amenities: Amenity[], amenityCodes: AmenityCode[]): number => {
-    let volume: number = 0;
-
-    const matchingAmenities = amenities.filter(amenity => amenityCodes.includes(amenity.amenityCode));
-
-    matchingAmenities.forEach(amenity => {
-      volume += Volume[amenity.density * amenity.size];
-    });
-
-    return volume;
-  }
 
   let actionElement: JSX.Element | undefined = undefined;
 
-  if (selectedAction !== undefined) {
+  if (selectedActionIndex !== undefined) {
     let lineBreaks = 0;
     let paragraphBreaks = 0;
 
-    const action = Actions[selectedAction];
+    const action = availableActions[selectedActionIndex];
 
     const descriptionElements: JSX.Element[] = [];
 
@@ -259,15 +319,7 @@ export default function Game(): JSX.Element {
     action.results.forEach((result: Result) => {
       const resultDescription: string[] = result.description.split('\n');
 
-      let roll: string = 'ROLL ';
-
-      if (result.from === result.to) {
-        roll = roll + `${result.from}`
-      } else {
-        roll = roll + `${result.from}-${result.to}`
-      }
-
-      roll = roll + ':';
+      let roll: string = `ROLL ${result.roll}:`;
 
       resultDescription.forEach((paragraph, index) => {
         const words: string[] = paragraph.split(' ');
@@ -296,7 +348,7 @@ export default function Game(): JSX.Element {
       <rect x={750} y={-30} width={80} height={80} stroke='none' fill='black' />
       <rect x={755} y={-25} width={70} height={70} stroke='none' fill='white' />
       <text x={775} y={26} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
-      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedAction(undefined)} />
+      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedActionIndex(undefined)} />
       {descriptionElements}
       <rect x={640} y={820} width={160} height={80} stroke='none' fill='black' />
       <rect x={645} y={825} width={150} height={70} stroke='none' fill='white' />
@@ -327,9 +379,9 @@ export default function Game(): JSX.Element {
 
         let amenityName = 'unknown';
 
-        if (amenity.amenityCode === AmenityCode.Water) {
+        if (amenity.code === AmenityCode.Water) {
           amenityName = 'water';
-        } else if (amenity.amenityCode === AmenityCode.Housing) {
+        } else if (amenity.code === AmenityCode.Housing) {
           amenityName = 'housing';
         }
 
@@ -454,13 +506,13 @@ export default function Game(): JSX.Element {
   }
 
   const roll = (): void => {
-    if (selectedAction === undefined) return;
+    if (selectedActionIndex === undefined) return;
 
-    const action = Actions[selectedAction];
+    const action = availableActions[selectedActionIndex];
 
     const dice: number = Math.floor(Math.random() * 6) + 1;
 
-    let outcome: Result | undefined = action.results.filter(result => result.from <= dice && result.to >= dice)[0];
+    let outcome: Result | undefined = action.results.filter(result => result.roll === dice)[0];
 
     if (outcome !== undefined) {
       if (selectedCellId !== undefined) {
@@ -473,81 +525,18 @@ export default function Game(): JSX.Element {
       }
     }
 
-    setSelectedAction(undefined);
+    setSelectedActionIndex(undefined);
+    setAvailableActions([]);
+    setSelectedCellId(undefined);
   }
 
-  // TODO this should also depend on nearby districts, also have a better balance like one home to every two employers
-  const employmentRate = (): EmploymentRate => {
-    if (selectedCellId === undefined)
-      return EmploymentRate.NotApplicable;
-  
-    const cell = grid[selectedCellId];
-  
-    if (cell === undefined)
-      return EmploymentRate.NotApplicable;
-  
-    const housingVolume = getVolume(cell.amenities, [AmenityCode.Housing]);
-    const employmentVolume = getVolume(cell.amenities, [AmenityCode.Commerce]);
-  
-    if (housingVolume === 0 && employmentVolume === 0)
-      return EmploymentRate.NotApplicable;
-  
-    if (housingVolume < employmentVolume)
-      return EmploymentRate.Full;
-  
-    const ratio = employmentVolume / housingVolume;
-  
-    if (ratio > 19 / 20)
-      return EmploymentRate.Full;
-    else if (ratio > 13 / 20)
-      return EmploymentRate.High;
-    else if (ratio > 7 / 20)
-      return EmploymentRate.Average;
-    else if (ratio > 1 / 20)
-      return EmploymentRate.Low;
-    else
-      return EmploymentRate.None;
-  }  
-
-  Object.keys(Actions).forEach(actionId => {
-    const action = Actions[actionId];
-    let included = true;
-
-    action.cardRequirements.attributes.forEach(cardRequirement => {
-      if (selectedCards.filter(cardId => Citizens[cardId].attributes.includes(cardRequirement.attributeId)).length < cardRequirement.count) {
-        included = false;
-      }
-    });
-
-    if (selectedCellId === undefined) {
-      included = false;
-    } else {
-      const selectedCell = grid[selectedCellId];
-
-      let availableSpace = 7;
-
-      selectedCell.amenities.forEach(amenity => {
-        availableSpace -= amenity.size;
-      });
-
-      if (availableSpace < action.spaceRequired) {
-        included = false;
-      }
-
-      if (action.cardRequirements.employmentRate != null && action.cardRequirements.employmentRate !== employmentRate())
-        included = false;
-    }
-    
-    if (included) {
-      actionElements.push(<g key={`action${actionId}`} transform={`translate(50 ${100 + (actionIndex * 120)})`}>
+  availableActions.forEach((action, actionIndex) => {
+      actionElements.push(<g key={`action${actionIndex}`} transform={`translate(50 ${100 + (actionIndex * 120)})`}>
         <rect width='800' height='100' stroke='none' fill='black' />
         <rect x={5} y={5} width={790} height={90} stroke='none' fill='white' />
-        <text x={25} y={70} fontSize='5em' fontFamily='monospace' fill='black'>{Actions[actionId].name}</text>
-        <rect width='800' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedAction(actionId)} />
+        <text x={25} y={70} fontSize='5em' fontFamily='monospace' fill='black'>{action.name}</text>
+        <rect width='800' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedActionIndex(actionIndex)} />
       </g>);
-
-      actionIndex++;
-    }
   });
 
   const cardElements: JSX.Element[] = cardsInHand.map((cardId: CitizenId, index: number) => {
@@ -618,8 +607,9 @@ export default function Game(): JSX.Element {
     const amenityElements: JSX.Element[] = [];
     const amenities: Amenity[] = grid[cellId].amenities;
 
-    const water = amenities.filter(amenity => amenity.amenityCode === AmenityCode.Water)[0];
-    const housing = amenities.filter(amenity => amenity.amenityCode === AmenityCode.Housing)[0];
+    const water = amenities.filter(amenity => amenity.code === AmenityCode.Water)[0];
+    const road = amenities.filter(amenity => amenity.code === AmenityCode.Road)[0];
+    const housing = amenities.filter(amenity => amenity.code === AmenityCode.Housing)[0];
 
     if (water !== undefined) {
       if (water.size === 1) {
@@ -628,6 +618,12 @@ export default function Game(): JSX.Element {
         amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
       } else if (water.size === 4) {
         amenityElements.push(<path key={`district${cellId}water`} d='M 50,70 L 70,80 L 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
+      }
+    }
+
+    if (road !== undefined) {
+      if (road.size === 1) {
+        amenityElements.push(<line x1={50} x2={150} y1={50} y2={50} stroke='black' strokeWidth={1} />);
       }
     }
 
@@ -655,7 +651,7 @@ export default function Game(): JSX.Element {
     return <g key={`district${cellId}`} transform={`translate(${350 + (Number(coords[0]) * 100)} ${675 + (Number(coords[1]) * 100)})`}>
       <rect width='200' height='100' stroke={selectedCellId === cellId ? 'black' : 'darkgray'} fill='none' />
       {amenityElements}
-      <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedCellId(prevCellId => prevCellId === cellId ? undefined : cellId)} />
+      <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => updateSelectedCell(cellId)} />
       {selectedCellId === cellId && <>
         <rect x={160} y={-40} width={80} height={80} stroke='none' fill='black' />
         <rect x={165} y={-35} width={70} height={70} stroke='none' fill='white' />
