@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CitizenId, Citizens, startingCitizens } from './citizens';
 import { AttributeCode, Attributes } from './attributes';
-import { Amenity, District } from './districts';
+import { Amenity, District, getDistrict } from './districts';
 import { AmenityCode } from './amenities';
 import { Action, DistrictState, Result } from './actions';
 import { EmploymentRate } from './enums';
@@ -27,6 +27,7 @@ export default function Game(): JSX.Element {
   const [selectedActionIndex, setSelectedActionIndex] = useState<number | undefined>(undefined);
   const [rollResults, setRollResults] = useState<{description: string, dice: number, rotation: number} | undefined>(undefined);
   const [inspectDistrict, setInspectDistrict] = useState<boolean>(false);
+  const [offset, setOffset] = useState<{x: number, y: number}>({x: 0, y: 0});
   const [errors, setErrors] = useState<string[]>([]);
 
   const cardsInDeck = (): CitizenId[] => {
@@ -134,7 +135,7 @@ export default function Game(): JSX.Element {
 
     const grid: {[coords: string]: District} = {};
 
-    grid['(0,0)'] = new District('Meldon', [{code: AmenityCode.Water, size: 1, density: 4}, {code: AmenityCode.Road}]);
+    grid['(0,0)'] = getDistrict(0, 0);
 
     setGrid(grid);
   }
@@ -384,6 +385,8 @@ export default function Game(): JSX.Element {
           amenityName = 'water';
         } else if (amenity.code === AmenityCode.Housing) {
           amenityName = 'housing';
+        } else if (amenity.code === AmenityCode.Road) {
+          amenityName = 'road';
         }
 
         let density = 'averagely';
@@ -517,9 +520,32 @@ export default function Game(): JSX.Element {
 
     if (outcome !== undefined) {
       if (selectedCellId !== undefined) {
-        const cell = grid[selectedCellId];
+        const newGrid = {...grid};
+
+        const cell = newGrid[selectedCellId];
 
         cell.amenities.push(outcome.amenity);
+
+        const coords = selectedCellId.substring(1, selectedCellId.length - 1).split(',');
+
+        const surrounds: {x: number, y: number}[] = [
+          {x: Number(coords[0]) + 1, y: Number(coords[1]) - 1},
+          {x: Number(coords[0]) + 2, y: Number(coords[1])},
+          {x: Number(coords[0]) + 1, y: Number(coords[1]) + 1},
+          {x: Number(coords[0]) - 1, y: Number(coords[1]) + 1},
+          {x: Number(coords[0]) - 2, y: Number(coords[1])},
+          {x: Number(coords[0]) - 1, y: Number(coords[1]) - 1},
+        ];
+
+        surrounds.forEach(coord => {
+          const id = `(${coord.x},${coord.y})`
+
+          if (newGrid[id] === undefined) {
+            newGrid[id] = getDistrict(coord.x, coord.y);
+          }
+        })
+
+        setGrid(newGrid);
 
         setRollResults({description: outcome.resultDescription, dice: dice, rotation: Math.random()});
         discardCards([...selectedCards]);
@@ -532,7 +558,7 @@ export default function Game(): JSX.Element {
   }
 
   availableActions.forEach((action, actionIndex) => {
-      actionElements.push(<g key={`action${actionIndex}`} transform={`translate(50 ${100 + (actionIndex * 120)})`}>
+      actionElements.push(<g key={`action${actionIndex}`} transform={`translate(50 ${910 + (actionIndex * 120)})`}>
         <rect width='800' height='100' stroke='none' fill='black' />
         <rect x={5} y={5} width={790} height={90} stroke='none' fill='white' />
         <text x={25} y={70} fontSize='5em' fontFamily='monospace' fill='black'>{action.name}</text>
@@ -624,9 +650,7 @@ export default function Game(): JSX.Element {
     }
 
     if (road !== undefined) {
-      if (road.size === 1) {
-        amenityElements.push(<line key={`district${cellId}road`} x1={50} x2={150} y1={50} y2={50} stroke='black' strokeWidth={1} />);
-      }
+      amenityElements.push(<line key={`district${cellId}road`} x1={50} x2={150} y1={50} y2={50} stroke='black' strokeWidth={1} />);
     }
 
     if (housing !== undefined) {
@@ -653,16 +677,18 @@ export default function Game(): JSX.Element {
       }
     }
 
-    return <g key={`district${cellId}`} transform={`translate(${150 + (Number(coords[0]) * 100)} ${675 + (Number(coords[1]) * 100)}) scale(3)`}>
-      <rect width='200' height='100' stroke={selectedCellId === cellId ? 'black' : 'darkgray'} fill='none' />
-      {amenityElements}
-      <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => updateSelectedCell(cellId)} />
-      {selectedCellId === cellId && <>
-        <rect x={160} y={-40} width={80} height={80} stroke='none' fill='black' />
-        <rect x={165} y={-35} width={70} height={70} stroke='none' fill='white' />
-        <text x={180} y={30} fontFamily='monospace' fontSize={80}>?</text>
-        <rect x={160} y={-40} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setInspectDistrict(prev => !prev)} />
-      </>}
+    return <g key={`district${cellId}`} mask="url(#mapMask)">
+      <g transform={`translate(${150 + (Number(coords[0]) * 300) - (offset.x * 300)} ${290 + (Number(coords[1]) * 300) - (offset.y * 300)}) scale(3)`}>
+        <rect width='200' height='100' stroke={selectedCellId === cellId ? 'black' : 'darkgray'} fill='none' />
+        {amenityElements}
+        <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => {updateSelectedCell(cellId); setOffset({x: Number(coords[0]), y: Number(coords[1])})}} />
+        {selectedCellId === cellId && <g transform={`translate(120 0) scale(0.4)`}>
+          <rect x={160} y={-40} width={80} height={80} stroke='none' fill='black' />
+          <rect x={165} y={-35} width={70} height={70} stroke='none' fill='white' />
+          <text x={180} y={30} fontFamily='monospace' fontSize={80}>?</text>
+          <rect x={160} y={-40} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setInspectDistrict(prev => !prev)} />
+        </g>}
+      </g>
     </g>;
   })
 
@@ -671,7 +697,9 @@ export default function Game(): JSX.Element {
       <div>
         <svg viewBox='0 0 900 1600' xmlns='http://www.w3.org/2000/svg' width='18em'>
           <rect width='900' height='1600' fill='black' stroke='none' />
-          <rect x='5' y='5' width='890' height='1590' fill='white' stroke='none' />
+          <rect x='5' y='5' width='890' height='880' fill='white' stroke='none' />
+          <rect x='5' y='890' width='890' height='260' fill='white' stroke='none' />
+          <rect x='5' y='1155' width='890' height='440' fill='white' stroke='none' />
           {cardsInDeck().length > 0 && <g transform='translate(15 1020)'>
             {cardsInDeck().length > 4  && <>
               <rect x='20' y='20' width='90' height='160' fill='black' stroke='none' />
@@ -698,8 +726,11 @@ export default function Game(): JSX.Element {
             <rect x='5' y='5' width='80' height='150' fill='white' stroke='none' />
             <text x={45 - 35} y={discardedCards.length > 9 ? '105' : '125'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='darkgray'>{discardedCards.length}</text>
           </g>}
-          {actionElements}
+          <mask id="mapMask">
+            <rect x='5' y='5' width='890' height='880' fill='white' stroke='none' />
+          </mask>
           {mapElements}
+          {actionElements}
           {actionElement}
           {cardElements}
         </svg>

@@ -17,3 +17,14 @@ export class District {
     this.amenities = amenities;
   }
 }
+
+export const getDistrict = (x: number, y: number): District => {
+  const amenities: Amenity[] = [{code: AmenityCode.Water, size: 1, density: 1}];
+
+  // a diagonal starting road going to the Northwest
+  if (x === y && x <= 0) {
+    amenities.push({code: AmenityCode.Road});
+  }
+
+  return new District(`District #${x}${y}`, amenities);
+}
