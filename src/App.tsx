@@ -17,6 +17,11 @@ const LineSpacing: number = 38;
 const ParagraphSpacing: number = 52;
 
 export default function Game(): JSX.Element {
+  const [mouseDown, setMouseDown] = useState<boolean>(false);
+  const [dragging, setDragging] = useState<boolean>(false);
+  const [origin, setOrigin] = useState({ x: 0, y: 0 });
+  const [coordinatesOrigin, setCoordinatesOrigin] = useState({ x: 0, y: 0 });
+  const [coordinates, setCoordinates] = useState({ x: 0, y: 0 });
   const [availableCards, setAvailableCards] = useState<CitizenId[]>([]);
   const [cardsInHand, setCardsInHand] = useState<CitizenId[]>([]);
   const [discardedCards, setDiscardedCards] = useState<CitizenId[]>([]);
@@ -27,8 +32,13 @@ export default function Game(): JSX.Element {
   const [selectedActionIndex, setSelectedActionIndex] = useState<number | undefined>(undefined);
   const [rollResults, setRollResults] = useState<{description: string, dice: number, rotation: number} | undefined>(undefined);
   const [inspectDistrict, setInspectDistrict] = useState<boolean>(false);
-  const [offset, setOffset] = useState<{x: number, y: number}>({x: 0, y: 0});
   const [errors, setErrors] = useState<string[]>([]);
+
+  const getCoordsFromCellId = (cellId: string): {x: number, y: number} => {
+    const coords = cellId.substring(1, cellId.length - 1).split(',');
+
+    return {x: Number(coords[0]), y: Number(coords[1])};
+  }
 
   const cardsInDeck = (): CitizenId[] => {
     return availableCards.filter(c => !cardsInHand.includes(c) && !discardedCards.includes(c));
@@ -526,15 +536,15 @@ export default function Game(): JSX.Element {
 
         cell.amenities.push(outcome.amenity);
 
-        const coords = selectedCellId.substring(1, selectedCellId.length - 1).split(',');
+        const coords = getCoordsFromCellId(selectedCellId);
 
         const surrounds: {x: number, y: number}[] = [
-          {x: Number(coords[0]) + 1, y: Number(coords[1]) - 1},
-          {x: Number(coords[0]) + 2, y: Number(coords[1])},
-          {x: Number(coords[0]) + 1, y: Number(coords[1]) + 1},
-          {x: Number(coords[0]) - 1, y: Number(coords[1]) + 1},
-          {x: Number(coords[0]) - 2, y: Number(coords[1])},
-          {x: Number(coords[0]) - 1, y: Number(coords[1]) - 1},
+          {x: coords.x + 1, y: coords.y - 1},
+          {x: coords.x + 2, y: coords.y},
+          {x: coords.x + 1, y: coords.y + 1},
+          {x: coords.x - 1, y: coords.y + 1},
+          {x: coords.x - 2, y: coords.y},
+          {x: coords.x - 1, y: coords.y - 1},
         ];
 
         surrounds.forEach(coord => {
@@ -629,7 +639,7 @@ export default function Game(): JSX.Element {
   });
 
   const mapElements: JSX.Element[] = Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).map(cellId => {
-    const coords = cellId.substring(1, cellId.length - 1).split(',');
+    const coords = getCoordsFromCellId(cellId);
 
     const amenityElements: JSX.Element[] = [];
     const amenities: Amenity[] = grid[cellId].amenities;
@@ -678,16 +688,9 @@ export default function Game(): JSX.Element {
     }
 
     return <g key={`district${cellId}`} mask="url(#mapMask)">
-      <g transform={`translate(${150 + (Number(coords[0]) * 300) - (offset.x * 300)} ${290 + (Number(coords[1]) * 300) - (offset.y * 300)}) scale(3)`}>
-        <rect width='200' height='100' stroke={selectedCellId === cellId ? 'black' : 'darkgray'} fill='none' />
+      <g transform={`translate(${150 + (coords.x * 300) + (coordinates.x * 3)} ${290 + (coords.y * 300) + (coordinates.y * 3)}) scale(3)`}>
         {amenityElements}
-        <rect width='200' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => {updateSelectedCell(cellId); setOffset({x: Number(coords[0]), y: Number(coords[1])})}} />
-        {selectedCellId === cellId && <g transform={`translate(120 0) scale(0.4)`}>
-          <rect x={160} y={-40} width={80} height={80} stroke='none' fill='black' />
-          <rect x={165} y={-35} width={70} height={70} stroke='none' fill='white' />
-          <text x={180} y={30} fontFamily='monospace' fontSize={80}>?</text>
-          <rect x={160} y={-40} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setInspectDistrict(prev => !prev)} />
-        </g>}
+        {selectedCellId === cellId && <circle cx={100} cy={50} r={50} stroke='pink' fill='none' />}
       </g>
     </g>;
   })
@@ -730,6 +733,52 @@ export default function Game(): JSX.Element {
             <rect x='5' y='5' width='890' height='880' fill='white' stroke='none' />
           </mask>
           {mapElements}
+          <rect x='5' y='5' width='890' height='880' fill='transparent' stroke='none' cursor={dragging ? 'move': 'pointer'}
+            onMouseDown={(event) => { setOrigin({ x: event.clientX, y: event.clientY }); setCoordinatesOrigin({x: coordinates.x, y: coordinates.y}); setMouseDown(true); }}
+            onMouseMove={(event) => {
+              if (mouseDown) {
+                setDragging(true);
+                setCoordinates({ x: coordinatesOrigin.x + event.clientX - origin.x, y: coordinatesOrigin.y + event.clientY - origin.y });
+              }
+            }}
+            onMouseUp={() => {
+              setMouseDown(false);
+
+              if (dragging) {
+                setDragging(false);
+              } else {
+                const x = origin.x - (coordinates.x + 150);
+                const y = origin.y - (coordinates.y + 150);
+
+                let maxDist: number | undefined = undefined;
+                let closestCellId: string | undefined = undefined;
+                
+                Object.keys(grid).forEach(cellId => {
+                  const coords = getCoordsFromCellId(cellId);
+                  const distance = Math.sqrt((((coords.x * 100) - x) * ((coords.x * 100) - x)) + (((coords.y * 100) - y) * ((coords.y * 100) - y)));
+
+                  if (maxDist === undefined || distance < maxDist) {
+                    maxDist = distance;
+                    closestCellId = cellId;
+                  }
+                });
+
+                if (closestCellId !== undefined) {
+                  updateSelectedCell(closestCellId);
+                }
+              }
+            }}
+            onMouseLeave={() => {
+              setMouseDown(false);
+              setDragging(false);
+            }}
+          />
+          {selectedCellId !== undefined && <g transform='translate(790 10)'>
+            <rect width={100} height={100} stroke='none' fill='black' />
+            <rect x={5} y={5} width={90} height={90} stroke='none' fill='white' />
+            <text x={25} y={80} fontSize={100} fontFamily='monospace' fill='black'>?</text>
+            <rect width={100} height={100} stroke='none' fill='transparent' cursor='pointer' onClick={() => setInspectDistrict(true)} />
+            </g>}
           {actionElements}
           {actionElement}
           {cardElements}
