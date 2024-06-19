@@ -19,9 +19,10 @@ const ParagraphSpacing: number = 52;
 export default function Game(): JSX.Element {
   const [mouseDown, setMouseDown] = useState<boolean>(false);
   const [dragging, setDragging] = useState<boolean>(false);
-  const [origin, setOrigin] = useState({ x: 0, y: 0 });
-  const [coordinatesOrigin, setCoordinatesOrigin] = useState({ x: 0, y: 0 });
-  const [coordinates, setCoordinates] = useState({ x: 0, y: 0 });
+  const [origin, setOrigin] = useState<{x: number, y: number}>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState<number>(1);
+  const [coordinatesOrigin, setCoordinatesOrigin] = useState<{x: number, y: number}>({ x: 0, y: 0 });
+  const [coordinates, setCoordinates] = useState<{x: number, y: number}>({ x: 0, y: 0 });
   const [availableCards, setAvailableCards] = useState<CitizenId[]>([]);
   const [cardsInHand, setCardsInHand] = useState<CitizenId[]>([]);
   const [discardedCards, setDiscardedCards] = useState<CitizenId[]>([]);
@@ -142,6 +143,8 @@ export default function Game(): JSX.Element {
     setSelectedCellId(undefined);
     setRollResults(undefined);
     setSelectedActionIndex(undefined);
+    setZoom(1);
+    setCoordinates({x: 0, y: 0});
 
     const grid: {[coords: string]: District} = {};
 
@@ -638,6 +641,20 @@ export default function Game(): JSX.Element {
     </g>;
   });
 
+  const zoomIn = (): void => {
+    setCoordinates(prev => {
+      return {x: prev.x + ((prev.x / zoom) * 0.2), y: prev.y + ((prev.y / zoom) * 0.2)}
+    });
+    setZoom(prev => prev + 0.2);
+  }
+
+  const zoomOut = (): void => {
+    setCoordinates(prev => {
+      return {x: prev.x - ((prev.x / zoom) * 0.2), y: prev.y - ((prev.y / zoom) * 0.2)}
+    });
+    setZoom(prev => prev - 0.2);
+  }
+
   const mapElements: JSX.Element[] = Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).map(cellId => {
     const coords = getCoordsFromCellId(cellId);
 
@@ -688,7 +705,7 @@ export default function Game(): JSX.Element {
     }
 
     return <g key={`district${cellId}`} mask="url(#mapMask)">
-      <g transform={`translate(${150 + (coords.x * 300) + (coordinates.x * 3)} ${290 + (coords.y * 300) + (coordinates.y * 3)}) scale(3)`}>
+      <g transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
         {amenityElements}
         {selectedCellId === cellId && <circle cx={100} cy={50} r={50} stroke='pink' fill='none' />}
       </g>
@@ -700,9 +717,9 @@ export default function Game(): JSX.Element {
       <div>
         <svg viewBox='0 0 900 1600' xmlns='http://www.w3.org/2000/svg' width='18em'>
           <rect width='900' height='1600' fill='black' stroke='none' />
-          <rect x='5' y='5' width='890' height='880' fill='white' stroke='none' />
-          <rect x='5' y='890' width='890' height='260' fill='white' stroke='none' />
-          <rect x='5' y='1155' width='890' height='440' fill='white' stroke='none' />
+          <rect id='mapframe' x='10' y='10' width='880' height='880' fill='white' stroke='none' />
+          <rect id='actionframe' x='10' y='900' width='880' height='250' fill='white' stroke='none' />
+          <rect id='cardframe' x='10' y='1160' width='880' height='430' fill='white' stroke='none' />
           {cardsInDeck().length > 0 && <g transform='translate(15 1020)'>
             {cardsInDeck().length > 4  && <>
               <rect x='20' y='20' width='90' height='160' fill='black' stroke='none' />
@@ -773,12 +790,24 @@ export default function Game(): JSX.Element {
               setDragging(false);
             }}
           />
-          {selectedCellId !== undefined && <g transform='translate(790 10)'>
+          <g transform='translate(780 20)'>
+            <rect width={100} height={100} stroke='none' fill='black' />
+            <rect x={5} y={5} width={90} height={90} stroke='none' fill='white' />
+            <text x={25} y={80} fontSize={100} fontFamily='monospace' fill='black'>+</text>
+            <rect width={100} height={100} stroke='none' fill='transparent' cursor='pointer' onClick={() => zoomIn()} />
+          </g>
+          <g transform='translate(780 130)'>
+            <rect width={100} height={100} stroke='none' fill='black' />
+            <rect x={5} y={5} width={90} height={90} stroke='none' fill='white' />
+            <text x={25} y={80} fontSize={100} fontFamily='monospace' fill='black'>-</text>
+            <rect width={100} height={100} stroke='none' fill='transparent' cursor='pointer' onClick={() => zoomOut()} />
+          </g>
+          {selectedCellId !== undefined && <g transform='translate(780 240)'>
             <rect width={100} height={100} stroke='none' fill='black' />
             <rect x={5} y={5} width={90} height={90} stroke='none' fill='white' />
             <text x={25} y={80} fontSize={100} fontFamily='monospace' fill='black'>?</text>
             <rect width={100} height={100} stroke='none' fill='transparent' cursor='pointer' onClick={() => setInspectDistrict(true)} />
-            </g>}
+          </g>}
           {actionElements}
           {actionElement}
           {cardElements}
