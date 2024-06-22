@@ -16,6 +16,15 @@ const FontSize: number = 30;
 const LineSpacing: number = 38;
 const ParagraphSpacing: number = 52;
 
+enum Color {
+  White = '#FFF',
+  LightGray = '#DDD',
+  MediumGray = '#090',
+  DarkGray = '#909',
+  Black = '#000',
+  None = 'none',
+}
+
 export default function Game(): JSX.Element {
   const [mouseDown, setMouseDown] = useState<boolean>(false);
   const [dragging, setDragging] = useState<boolean>(false);
@@ -655,7 +664,53 @@ export default function Game(): JSX.Element {
     setZoom(prev => prev - 0.2);
   }
 
-  const mapElements: JSX.Element[] = Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).map(cellId => {
+  const mapElements: JSX.Element[] = [];
+
+  Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).forEach(cellId => {
+    const coords = getCoordsFromCellId(cellId);
+
+    mapElements.push(<g key={`district${cellId}outline`} mask="url(#mapMask)">
+      <g transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
+        <rect x={-2} y={-2} width={204} height={104} stroke={Color.None} fill={Color.Black} />
+      </g>
+    </g>);
+  });
+
+  Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).forEach(cellId => {
+    const coords = getCoordsFromCellId(cellId);
+
+    let x = 0;
+    let y = 0;
+    let width = 200;
+    let height = 100;
+
+    if (grid[`(${coords.x - 2},${coords.y})`] !== undefined) {
+      x -= 5
+      width += 5;
+    }
+
+    if (grid[`(${coords.x + 2},${coords.y})`] !== undefined) {
+      width += 5;
+    }
+
+    if (grid[`(${coords.x - 1},${coords.y - 1})`] !== undefined && grid[`(${coords.x + 1},${coords.y - 1})`] !== undefined) {
+      y -= 5;
+      height += 5;
+    }
+
+    if (grid[`(${coords.x - 1},${coords.y + 1})`] !== undefined && grid[`(${coords.x + 1},${coords.y + 1})`] !== undefined) {
+      height += 5;
+    }
+
+    mapElements.push(<g key={`district${cellId}background`} mask="url(#mapMask)">
+      <g transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
+        <rect x={x} y={y} width={width} height={height} stroke={Color.None} fill={Color.White} />
+        {selectedCellId === cellId && <circle cx={100} cy={50} r={50} stroke='pink' fill='none' />}
+      </g>
+    </g>);
+  });
+
+  Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).forEach(cellId => {
     const coords = getCoordsFromCellId(cellId);
 
     const amenityElements: JSX.Element[] = [];
@@ -704,20 +759,20 @@ export default function Game(): JSX.Element {
       }
     }
 
-    return <g key={`district${cellId}`} mask="url(#mapMask)">
+    mapElements.push(<g key={`district${cellId}`} mask="url(#mapMask)">
       <g transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
         {amenityElements}
         {selectedCellId === cellId && <circle cx={100} cy={50} r={50} stroke='pink' fill='none' />}
       </g>
-    </g>;
-  })
+    </g>);
+  });
 
   return (
     <>
       <div>
-        <svg viewBox='0 0 900 1600' xmlns='http://www.w3.org/2000/svg' width='18em'>
+        <svg viewBox='0 0 900 1600' xmlns='http://www.w3.org/2000/svg' width='18em' shapeRendering="geometricPrecision">
           <rect width='900' height='1600' fill='black' stroke='none' />
-          <rect id='mapframe' x='10' y='10' width='880' height='880' fill='white' stroke='none' />
+          <rect id='mapframe' x='10' y='10' width='880' height='880' fill={Color.LightGray} stroke='none' />
           <rect id='actionframe' x='10' y='900' width='880' height='250' fill='white' stroke='none' />
           <rect id='cardframe' x='10' y='1160' width='880' height='430' fill='white' stroke='none' />
           {cardsInDeck().length > 0 && <g transform='translate(15 1020)'>
@@ -747,7 +802,7 @@ export default function Game(): JSX.Element {
             <text x={45 - 35} y={discardedCards.length > 9 ? '105' : '125'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='darkgray'>{discardedCards.length}</text>
           </g>}
           <mask id="mapMask">
-            <rect x='5' y='5' width='890' height='880' fill='white' stroke='none' />
+            <rect x='10' y='10' width='880' height='880' fill='white' stroke='none' />
           </mask>
           {mapElements}
           <rect x='5' y='5' width='890' height='880' fill='transparent' stroke='none' cursor={dragging ? 'move': 'pointer'}
