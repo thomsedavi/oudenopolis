@@ -19,10 +19,11 @@ const ParagraphSpacing: number = 52;
 enum Color {
   White = '#FFF',
   LightGray = '#DDD',
-  MediumGray = '#090',
-  DarkGray = '#909',
+  MediumGray = '#BBB',
+  DarkGray = '#999',
   Black = '#000',
   None = 'none',
+  Transparent = 'transparent',
 }
 
 export default function Game(): JSX.Element {
@@ -251,7 +252,7 @@ export default function Game(): JSX.Element {
     setErrors(newErrors);
   }
 
-  const getAttributeFill = (attributeId: AttributeCode): string => {
+  const getAttributeFill = (attributeId: AttributeCode): Color => {
     let count = 0;
 
     cardsInHand.forEach(cardId => {
@@ -260,10 +261,10 @@ export default function Game(): JSX.Element {
       attributes.includes(attributeId) && count++;
     });
 
-    return count > 1 ? 'black' : 'none';
+    return count > 1 ? Color.Black : Color.None;
   }
 
-  const getAttributeStroke = (attributeId: AttributeCode): string => {
+  const getAttributeStroke = (attributeId: AttributeCode): Color => {
     let count = 0;
 
     cardsInHand.forEach(cardId => {
@@ -272,7 +273,7 @@ export default function Game(): JSX.Element {
       attributes.includes(attributeId) && count++;
     });
 
-    return count > 1 ? 'black' : 'darkgray';
+    return count > 1 ? Color.Black : Color.DarkGray;
   }
 
   const discardCards = (cardCodes: CitizenId[]): void => {
@@ -326,7 +327,7 @@ export default function Game(): JSX.Element {
         if (line === '') {
           line = word;
         } else if ((`${line} ${word}`).length > MaxLineLength) {
-          descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+          descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill={Color.Black}>{line}</text>)
           line = word;
           lineBreaks++
         } else {
@@ -334,7 +335,7 @@ export default function Game(): JSX.Element {
         }
       });
 
-      descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+      descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill={Color.Black}>{line}</text>)
       paragraphBreaks++;
     });
 
@@ -353,7 +354,7 @@ export default function Game(): JSX.Element {
           if (line === '') {
             line = word;
           } else if ((`${line} ${word}`).length > MaxLineLength) {
-            descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fontWeight={600} fill='darkgray'>{line}</text>)
+            descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fontWeight={600} fill={Color.DarkGray}>{line}</text>)
             line = word;
             lineBreaks++;
           } else {
@@ -361,23 +362,26 @@ export default function Game(): JSX.Element {
           }
         });
   
-        descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fontWeight={600} fill='darkgray'>{line}</text>) 
+        descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fontWeight={600} fill={Color.DarkGray}>{line}</text>) 
         paragraphBreaks++;
       });
     });
 
-    actionElement = <g transform='translate(50 50)'>
-      <rect width={800} height={900} stroke='none' fill='black' />
-      <rect x={5} y={5} width={790} height={890} stroke='none' fill='white' />
-      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='black' />
-      <rect x={755} y={-25} width={70} height={70} stroke='none' fill='white' />
-      <text x={775} y={26} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
-      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedActionIndex(undefined)} />
+    actionElement = <g transform='translate(10 10)'>
+      <rect width={880} height={880} stroke={Color.None} fill={Color.White} />
+      <g transform='translate(790 10)'>
+        <rect width={80} height={80} stroke={Color.None} fill={Color.Black} />
+        <rect x={5} y={5} width={70} height={70} stroke={Color.None} fill={Color.White} />
+        <text x={25} y={56} fontSize='4em' fontFamily='monospace' fill={Color.Black}>X</text>
+        <rect width={80} height={80} stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => setSelectedActionIndex(undefined)} />
+      </g>
       {descriptionElements}
-      <rect x={640} y={820} width={160} height={80} stroke='none' fill='black' />
-      <rect x={645} y={825} width={150} height={70} stroke='none' fill='white' />
-      <text x={665} y={876} fontSize='4em' fontFamily='monospace' fill='black'>ROLL</text>
-      <rect x={640} y={820} width={160} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => roll()} />
+      <g transform='translate(710 790)'>
+        <rect width={160} height={80} stroke={Color.None} fill={Color.Black} />
+        <rect x={5} y={5} width={150} height={70} stroke={Color.None} fill={Color.White} />
+        <text x={25} y={56} fontSize='4em' fontFamily='monospace' fill={Color.Black}>ROLL</text>
+        <rect width={160} height={80} stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => roll()} />
+      </g>
     </g>;
   }
 
@@ -442,7 +446,7 @@ export default function Game(): JSX.Element {
           if (line === '') {
             line = word;
           } else if ((`${line} ${word}`).length > MaxLineLength) {
-            descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+            descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill={Color.Black}>{line}</text>)
             line = word;
             lineBreaks++;
           } else {
@@ -450,18 +454,18 @@ export default function Game(): JSX.Element {
           }
         });
   
-        descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>) 
+        descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill={Color.Black}>{line}</text>) 
         paragraphBreaks++;
       });
     });
 
     actionElement = <g transform='translate(50 50)'>
-      <rect width={800} height={900} stroke='none' fill='black' />
-      <rect x={5} y={5} width={790} height={890} stroke='none' fill='white' />
-      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='black' />
-      <rect x={755} y={-25} width={70} height={70} stroke='none' fill='white' />
-      <text x={775} y={26} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
-      <rect x={750} y={-30} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setInspectDistrict(value => !value)} />
+      <rect width={800} height={900} stroke={Color.None} fill={Color.Black} />
+      <rect x={5} y={5} width={790} height={890} stroke={Color.None} fill={Color.White} />
+      <rect x={750} y={-30} width={80} height={80} stroke={Color.None} fill={Color.Black} />
+      <rect x={755} y={-25} width={70} height={70} stroke={Color.None} fill={Color.White} />
+      <text x={775} y={26} fontSize='4em' fontFamily='monospace' fill={Color.Black}>X</text>
+      <rect x={750} y={-30} width={80} height={80} stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => setInspectDistrict(value => !value)} />
       {descriptionElements}
     </g>;
   }
@@ -482,7 +486,7 @@ export default function Game(): JSX.Element {
         if (line === '') {
           line = word;
         } else if ((`${line} ${word}`).length > MaxLineLength) {
-          descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+          descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill={Color.Black}>{line}</text>)
           line = word;
           lineBreaks++
         } else {
@@ -490,44 +494,45 @@ export default function Game(): JSX.Element {
         }
       });
 
-      descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill='black'>{line}</text>)
+      descriptionElements.push(<text key={`description${descriptionElements.length}`} x={34} y={56 + (lineBreaks * LineSpacing) + (paragraphBreaks * ParagraphSpacing)} fontSize={FontSize} fontFamily='monospace' fill={Color.Black}>{line}</text>)
       paragraphBreaks++;
     });
 
     const diceElements: JSX.Element[] = [];
 
-    diceElements.push(<rect key='thedice' width={120} height={120} rx={10} strokeWidth={3} stroke='black' fill='none' />);
+    diceElements.push(<rect key='thedice' width={120} height={120} rx={10} strokeWidth={3} stroke={Color.Black} fill={Color.None} />);
 
     if ([1, 3, 5].includes(rollResults.dice)) {
-      diceElements.push(<circle key='thedice1' cx={60} cy={60} r={10} strokeWidth={3} stroke='black' fill='black' />);
+      diceElements.push(<circle key='thedice1' cx={60} cy={60} r={10} strokeWidth={3} stroke={Color.Black} fill={Color.Black} />);
     }
 
     if ([2, 3, 4, 5, 6].includes(rollResults.dice)) {
-      diceElements.push(<circle key='thedice2' cx={30} cy={30} r={10} strokeWidth={3} stroke='black' fill='black' />);
-      diceElements.push(<circle key='thedice3' cx={90} cy={90} r={10} strokeWidth={3} stroke='black' fill='black' />);
+      diceElements.push(<circle key='thedice2' cx={30} cy={30} r={10} strokeWidth={3} stroke={Color.Black} fill={Color.Black} />);
+      diceElements.push(<circle key='thedice3' cx={90} cy={90} r={10} strokeWidth={3} stroke={Color.Black} fill={Color.Black} />);
     }
 
     if ([4, 5, 6].includes(rollResults.dice)) {
-      diceElements.push(<circle key='thedice4' cx={30} cy={90} r={10} strokeWidth={3} stroke='black' fill='black' />);
-      diceElements.push(<circle key='thedice5' cx={90} cy={30} r={10} strokeWidth={3} stroke='black' fill='black' />);
+      diceElements.push(<circle key='thedice4' cx={30} cy={90} r={10} strokeWidth={3} stroke={Color.Black} fill={Color.Black} />);
+      diceElements.push(<circle key='thedice5' cx={90} cy={30} r={10} strokeWidth={3} stroke={Color.Black} fill={Color.Black} />);
     }
 
     if (rollResults.dice === 6) {
-      diceElements.push(<circle key='thedice6' cx={30} cy={60} r={10} strokeWidth={3} stroke='black' fill='black' />);
-      diceElements.push(<circle key='thedice7' cx={90} cy={60} r={10} strokeWidth={3} stroke='black' fill='black' />);
+      diceElements.push(<circle key='thedice6' cx={30} cy={60} r={10} strokeWidth={3} stroke={Color.Black} fill={Color.Black} />);
+      diceElements.push(<circle key='thedice7' cx={90} cy={60} r={10} strokeWidth={3} stroke={Color.Black} fill={Color.Black} />);
     }
 
-    const diceElement: JSX.Element = <g transform={` translate(340 50) rotate(${rollResults.rotation * 360} 60 60)`}>{diceElements}</g>;
+    const diceElement: JSX.Element = <g transform={` translate(380 50) rotate(${rollResults.rotation * 360} 60 60)`}>{diceElements}</g>;
 
-    actionElement = <g transform='translate(50 50)'>
-      <rect width={800} height={900} stroke='none' fill='black' />
-      <rect x={5} y={5} width={790} height={890} stroke='none' fill='white' />
+    actionElement = <g transform='translate(10 10)'>
+      <rect width={880} height={880} stroke={Color.None} fill={Color.White} />
       {diceElement}
       {descriptionElements}
-      <rect x={720} width={80} height={80} stroke='none' fill='black' />
-      <rect x={725} y={5} width={70} height={70} stroke='none' fill='white' />
-      <text x={745} y={56} fontSize='4em' fontFamily='monospace' fill='black'>X</text>
-      <rect x={720} width={80} height={80} stroke='none' fill='transparent' cursor='pointer' onClick={() => setRollResults(undefined)} />
+      <g transform='translate(790 10)'>
+        <rect width={80} height={80} stroke={Color.None} fill={Color.Black} />
+        <rect x={5} y={5} width={70} height={70} stroke={Color.None} fill={Color.White} />
+        <text x={25} y={56} fontSize='4em' fontFamily='monospace' fill={Color.Black}>X</text>
+        <rect width={80} height={80} stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => setRollResults(undefined)} />
+      </g>
     </g>;
   }
 
@@ -581,10 +586,10 @@ export default function Game(): JSX.Element {
 
   availableActions.forEach((action, actionIndex) => {
       actionElements.push(<g key={`action${actionIndex}`} transform={`translate(50 ${910 + (actionIndex * 120)})`}>
-        <rect width='800' height='100' stroke='none' fill='black' />
-        <rect x={5} y={5} width={790} height={90} stroke='none' fill='white' />
-        <text x={25} y={70} fontSize='5em' fontFamily='monospace' fill='black'>{action.name}</text>
-        <rect width='800' height='100' stroke='none' fill='transparent' cursor='pointer' onClick={() => setSelectedActionIndex(actionIndex)} />
+        <rect width='800' height='100' stroke={Color.None} fill={Color.Black} />
+        <rect x={5} y={5} width={790} height={90} stroke={Color.None} fill={Color.White} />
+        <text x={25} y={70} fontSize='5em' fontFamily='monospace' fill={Color.Black}>{action.name}</text>
+        <rect width='800' height='100' stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => setSelectedActionIndex(actionIndex)} />
       </g>);
   });
 
@@ -601,33 +606,33 @@ export default function Game(): JSX.Element {
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[0])).length > 1) {
       attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[0])} fill={getAttributeFill(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute0 = [<path strokeWidth='0.04' stroke='lightgray' fill='none' key={`card${index}path0`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
+      attribute0 = [<path strokeWidth='0.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path0`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[1])).length > 1) {
       attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[1])} fill={getAttributeFill(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute1 = [<path strokeWidth='0.04' stroke='lightgray' fill='none' key={`card${index}path1`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
+      attribute1 = [<path strokeWidth='0.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path1`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[2])).length > 1) {
       attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[2])} fill={getAttributeFill(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute2 = [<path strokeWidth='0.04' stroke='lightgray' fill='none' key={`card${index}path2`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
+      attribute2 = [<path strokeWidth='0.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path2`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[3])).length > 1) {
       attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[3])} fill={getAttributeFill(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute3 = [<path strokeWidth='0.04' stroke='lightgray' fill='none' key={`card${index}path3`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
+      attribute3 = [<path strokeWidth='0.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path3`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
     }
 
     return <g key={`card${index}`} transform={`translate(${120 + (index * 220)} ${selected ? 1395 : 1400}) scale(2.3)`}>
-      {selected && <rect x='-42' width='90' y='-77' height='160' fill='darkgray'/>}
-      <rect x='-45' width='90' y='-80' height='160' fill='black'/>
-      <rect x='-42' width='84' y='-77' height='154' fill='white'/>
-      <text x={0 - (nameBits[0].length * 3.6)} y='-60' fontSize='1em' fontFamily='monospace' fill='black'>{nameBits[0]}</text>
-      {nameBits[1] && <text x={0 - (nameBits[1].length * 3.6)} y='-40' fontSize='1em' fontFamily='monospace' fill='black'>{nameBits[1]}</text>}
+      {selected && <rect x='-42' width='90' y='-77' height='160' fill={Color.DarkGray}/>}
+      <rect x='-45' width='90' y='-80' height='160' fill={Color.Black}/>
+      <rect x='-42' width='84' y='-77' height='154' fill={Color.White}/>
+      <text x={0 - (nameBits[0].length * 3.6)} y='-60' fontSize='1em' fontFamily='monospace' fill={Color.Black}>{nameBits[0]}</text>
+      {nameBits[1] && <text x={0 - (nameBits[1].length * 3.6)} y='-40' fontSize='1em' fontFamily='monospace' fill={Color.Black}>{nameBits[1]}</text>}
       <g transform='translate(-40 -20) scale(35)'>
         {attribute0}
       </g>
@@ -640,12 +645,12 @@ export default function Game(): JSX.Element {
       <g transform='translate(0 20) scale(35)'>
         {attribute3}
       </g>
-      <rect x='-45' width='90' y='-80' height='160' fill='transparent' cursor='pointer' onClick={() => toggleCard(cardId)} />
+      <rect x='-45' width='90' y='-80' height='160' fill={Color.Transparent} cursor='pointer' onClick={() => toggleCard(cardId)} />
       {selected && <g transform={`translate(5 -100)`}>
-        <rect width={40} height={40} stroke='none' fill='black' />
-        <rect x={3} y={3} width={34} height={34} stroke='none' fill='white' />
-        <text x={12} y={30} fontSize='2em' fontFamily='monospace' fill='black'>X</text>
-        <rect width={40} height={40} stroke='none' fill='transparent' cursor='pointer' onClick={() => discardCards([cardId])} />
+        <rect width={40} height={40} stroke={Color.None} fill={Color.Black} />
+        <rect x={3} y={3} width={34} height={34} stroke={Color.None} fill={Color.White} />
+        <text x={12} y={30} fontSize='2em' fontFamily='monospace' fill={Color.Black}>X</text>
+        <rect width={40} height={40} stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => discardCards([cardId])} />
       </g>}
     </g>;
   });
@@ -705,7 +710,6 @@ export default function Game(): JSX.Element {
     mapElements.push(<g key={`district${cellId}background`} mask="url(#mapMask)">
       <g transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
         <rect x={x} y={y} width={width} height={height} stroke={Color.None} fill={Color.White} />
-        {selectedCellId === cellId && <circle cx={100} cy={50} r={50} stroke='pink' fill='none' />}
       </g>
     </g>);
   });
@@ -723,26 +727,26 @@ export default function Game(): JSX.Element {
 
     if (water !== undefined) {
       if (water.size === 1) {
-        amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80' stroke='black' fill='none' />);
+        amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80' stroke={Color.Black} fill={Color.None} />);
       } else if (water.size === 2) {
-        amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
+        amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke={Color.Black} fill={Color.None} />);
       } else if (water.size === 4) {
-        amenityElements.push(<path key={`district${cellId}water`} d='M 50,70 L 70,80 L 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke='black' fill='none' />);
+        amenityElements.push(<path key={`district${cellId}water`} d='M 50,70 L 70,80 L 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke={Color.Black} fill={Color.None} />);
       }
     }
 
     if (road !== undefined) {
-      amenityElements.push(<line key={`district${cellId}road`} x1={50} x2={150} y1={50} y2={50} stroke='black' strokeWidth={1} />);
+      amenityElements.push(<line key={`district${cellId}road`} x1={50} x2={150} y1={50} y2={50} stroke={Color.Black} strokeWidth={1} />);
     }
 
     if (housing !== undefined) {
       if (housing.size === 1) {
         if (housing.usage === 'LOW') {
-          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='lightgray' />);
+          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke={Color.Black} fill={Color.LightGray} />);
         } else if (housing.usage === 'MEDIUM') {
-          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='darkgray' />);
+          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke={Color.Black} fill={Color.DarkGray} />);
         } else {
-          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='black' />);
+          amenityElements.push(<rect key={`district${cellId}housing`} x={20} y={20} width={20} height={20} strokeWidth={1} stroke={Color.Black} fill={Color.Black} />);
         }
       }
     }
@@ -750,11 +754,11 @@ export default function Game(): JSX.Element {
     if (medical !== undefined) {
       if (medical.size === 1) {
         if (medical.usage === 'LOW') {
-          amenityElements.push(<rect key={`district${cellId}medical`} x={120} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='lightgray' />);
+          amenityElements.push(<rect key={`district${cellId}medical`} x={120} y={20} width={20} height={20} strokeWidth={1} stroke={Color.Black} fill={Color.LightGray} />);
         } else if (medical.usage === 'MEDIUM') {
-          amenityElements.push(<rect key={`district${cellId}medical`} x={120} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='darkgray' />);
+          amenityElements.push(<rect key={`district${cellId}medical`} x={120} y={20} width={20} height={20} strokeWidth={1} stroke={Color.Black} fill={Color.DarkGray} />);
         } else {
-          amenityElements.push(<rect key={`district${cellId}medical`} x={120} y={20} width={20} height={20} strokeWidth={1} stroke='black' fill='black' />);
+          amenityElements.push(<rect key={`district${cellId}medical`} x={120} y={20} width={20} height={20} strokeWidth={1} stroke={Color.Black} fill={Color.Black} />);
         }
       }
     }
@@ -762,7 +766,7 @@ export default function Game(): JSX.Element {
     mapElements.push(<g key={`district${cellId}`} mask="url(#mapMask)">
       <g transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
         {amenityElements}
-        {selectedCellId === cellId && <circle cx={100} cy={50} r={50} stroke='pink' fill='none' />}
+        {selectedCellId === cellId && <circle cx={100} cy={50} r={50} stroke={Color.DarkGray} fill={Color.None} />}
       </g>
     </g>);
   });
@@ -771,41 +775,41 @@ export default function Game(): JSX.Element {
     <>
       <div>
         <svg viewBox='0 0 900 1600' xmlns='http://www.w3.org/2000/svg' width='18em' shapeRendering="geometricPrecision">
-          <rect width='900' height='1600' fill='black' stroke='none' />
-          <rect id='mapframe' x='10' y='10' width='880' height='880' fill={Color.LightGray} stroke='none' />
-          <rect id='actionframe' x='10' y='900' width='880' height='250' fill='white' stroke='none' />
-          <rect id='cardframe' x='10' y='1160' width='880' height='430' fill='white' stroke='none' />
+          <rect width='900' height='1600' fill={Color.Black} stroke={Color.None} />
+          <rect id='mapframe' x='10' y='10' width='880' height='880' fill={Color.DarkGray} stroke={Color.None} />
+          <rect id='actionframe' x='10' y='900' width='880' height='250' fill={Color.White} stroke={Color.None} />
+          <rect id='cardframe' x='10' y='1160' width='880' height='430' fill={Color.White} stroke={Color.None} />
           {cardsInDeck().length > 0 && <g transform='translate(15 1020)'>
             {cardsInDeck().length > 4  && <>
-              <rect x='20' y='20' width='90' height='160' fill='black' stroke='none' />
-              <rect x='25' y='25' width='80' height='150' fill='white' stroke='none' />
+              <rect x='20' y='20' width='90' height='160' fill={Color.Black} stroke={Color.None} />
+              <rect x='25' y='25' width='80' height='150' fill={Color.White} stroke={Color.None} />
             </>}
             {cardsInDeck().length > 1  && <>
-              <rect x='10' y='10' width='90' height='160' fill='black' stroke='none' />
-              <rect x='15' y='15' width='80' height='150' fill='white' stroke='none' />
+              <rect x='10' y='10' width='90' height='160' fill={Color.Black} stroke={Color.None} />
+              <rect x='15' y='15' width='80' height='150' fill={Color.White} stroke={Color.None} />
             </>}
-            <rect width='90' height='160' fill='black' stroke='none' />
-            <rect x='5' y='5' width='80' height='150' fill='white' stroke='none' />
-            <text x={45 - 35} y='125' fontSize='10em' fontFamily='monospace' fill='black'>{cardsInDeck().length}</text>
+            <rect width='90' height='160' fill={Color.Black} stroke={Color.None} />
+            <rect x='5' y='5' width='80' height='150' fill={Color.White} stroke={Color.None} />
+            <text x={45 - 35} y='125' fontSize='10em' fontFamily='monospace' fill={Color.Black}>{cardsInDeck().length}</text>
           </g>}
           {discardedCards.length > 0 && <g transform='translate(135 1020)'>
             {discardedCards.length > 4  && <>
-              <rect x='20' y='20' width='90' height='160' fill='darkgray' stroke='none' />
-              <rect x='25' y='25' width='80' height='150' fill='white' stroke='none' />
+              <rect x='20' y='20' width='90' height='160' fill={Color.DarkGray} stroke={Color.None} />
+              <rect x='25' y='25' width='80' height='150' fill={Color.White} stroke={Color.None} />
             </>}
             {discardedCards.length > 1  && <>
-              <rect x='10' y='10' width='90' height='160' fill='darkgray' stroke='none' />
-              <rect x='15' y='15' width='80' height='150' fill='white' stroke='none' />
+              <rect x='10' y='10' width='90' height='160' fill={Color.DarkGray} stroke={Color.None} />
+              <rect x='15' y='15' width='80' height='150' fill={Color.White} stroke={Color.None} />
             </>}
-            <rect width='90' height='160' fill='darkgray' stroke='none' />
-            <rect x='5' y='5' width='80' height='150' fill='white' stroke='none' />
-            <text x={45 - 35} y={discardedCards.length > 9 ? '105' : '125'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill='darkgray'>{discardedCards.length}</text>
+            <rect width='90' height='160' fill={Color.DarkGray} stroke={Color.None} />
+            <rect x='5' y='5' width='80' height='150' fill={Color.White} stroke={Color.None} />
+            <text x={45 - 35} y={discardedCards.length > 9 ? '105' : '125'} fontSize={discardedCards.length > 9 ? '5em' : '10em'} fontFamily='monospace' fill={Color.DarkGray}>{discardedCards.length}</text>
           </g>}
           <mask id="mapMask">
-            <rect x='10' y='10' width='880' height='880' fill='white' stroke='none' />
+            <rect x='10' y='10' width='880' height='880' fill={Color.White} stroke={Color.None} />
           </mask>
           {mapElements}
-          <rect x='5' y='5' width='890' height='880' fill='transparent' stroke='none' cursor={dragging ? 'move': 'pointer'}
+          <rect x='5' y='5' width='890' height='880' fill={Color.Transparent} stroke={Color.None} cursor={dragging ? 'move': 'pointer'}
             onMouseDown={(event) => { setOrigin({ x: event.clientX, y: event.clientY }); setCoordinatesOrigin({x: coordinates.x, y: coordinates.y}); setMouseDown(true); }}
             onMouseMove={(event) => {
               if (mouseDown) {
@@ -846,22 +850,28 @@ export default function Game(): JSX.Element {
             }}
           />
           <g transform='translate(780 20)'>
-            <rect width={100} height={100} stroke='none' fill='black' />
-            <rect x={5} y={5} width={90} height={90} stroke='none' fill='white' />
-            <text x={25} y={80} fontSize={100} fontFamily='monospace' fill='black'>+</text>
-            <rect width={100} height={100} stroke='none' fill='transparent' cursor='pointer' onClick={() => zoomIn()} />
+            <rect width={100} height={100} stroke={Color.None} fill={Color.Black} />
+            <rect x={5} y={5} width={90} height={90} stroke={Color.None} fill={Color.White} />
+            <text x={25} y={80} fontSize={100} fontFamily='monospace' fill={Color.Black}>+</text>
+            <rect width={100} height={100} stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => zoomIn()} />
           </g>
           <g transform='translate(780 130)'>
-            <rect width={100} height={100} stroke='none' fill='black' />
-            <rect x={5} y={5} width={90} height={90} stroke='none' fill='white' />
-            <text x={25} y={80} fontSize={100} fontFamily='monospace' fill='black'>-</text>
-            <rect width={100} height={100} stroke='none' fill='transparent' cursor='pointer' onClick={() => zoomOut()} />
+            <rect width={100} height={100} stroke={Color.None} fill={Color.Black} />
+            <rect x={5} y={5} width={90} height={90} stroke={Color.None} fill={Color.White} />
+            <text x={25} y={80} fontSize={100} fontFamily='monospace' fill={Color.Black}>-</text>
+            <rect width={100} height={100} stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => zoomOut()} />
           </g>
-          {selectedCellId !== undefined && <g transform='translate(780 240)'>
-            <rect width={100} height={100} stroke='none' fill='black' />
-            <rect x={5} y={5} width={90} height={90} stroke='none' fill='white' />
-            <text x={25} y={80} fontSize={100} fontFamily='monospace' fill='black'>?</text>
-            <rect width={100} height={100} stroke='none' fill='transparent' cursor='pointer' onClick={() => setInspectDistrict(true)} />
+          <g transform='translate(780 240)'>
+            <rect width={100} height={100} stroke={Color.None} fill={Color.Black} />
+            <rect x={5} y={5} width={90} height={90} stroke={Color.None} fill={Color.White} />
+            <text x={7.5} y={85} fontSize={100} fontFamily='monospace' fill={Color.Black}>⯐</text>
+            <rect width={100} height={100} stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => {setCoordinates({x: 0, y: 0}); setZoom(1);}} />
+          </g>
+          {selectedCellId !== undefined && <g transform='translate(780 350)'>
+            <rect width={100} height={100} stroke={Color.None} fill={Color.Black} />
+            <rect x={5} y={5} width={90} height={90} stroke={Color.None} fill={Color.White} />
+            <text x={25} y={80} fontSize={100} fontFamily='monospace' fill={Color.Black}>?</text>
+            <rect width={100} height={100} stroke={Color.None} fill={Color.Transparent} cursor='pointer' onClick={() => setInspectDistrict(true)} />
           </g>}
           {actionElements}
           {actionElement}
