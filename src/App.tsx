@@ -16,6 +16,8 @@ const FontSize: number = 30;
 const LineSpacing: number = 38;
 const ParagraphSpacing: number = 52;
 
+const WaterBorder: number = 5;
+
 enum Color {
   White = '#FFF',
   LightGray = '#DDD',
@@ -604,27 +606,27 @@ export default function Game(): JSX.Element {
     let attribute3: JSX.Element[] = [];
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[0])).length > 1) {
-      attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[0])} fill={getAttributeFill(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute0 = Attributes[card.attributes[0]].paths.map((path: string, pathIndex: number) => <path strokeWidth='.04' stroke={getAttributeStroke(card.attributes[0])} fill={getAttributeFill(card.attributes[0])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute0 = [<path strokeWidth='0.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path0`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
+      attribute0 = [<path strokeWidth='.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path0`} d='M .5 .25 L 0 .25 L .5 0 L 1 .25 L .25 .5 L .75 .5' />];
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[1])).length > 1) {
-      attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[1])} fill={getAttributeFill(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute1 = Attributes[card.attributes[1]].paths.map((path: string, pathIndex: number) => <path strokeWidth='.04' stroke={getAttributeStroke(card.attributes[1])} fill={getAttributeFill(card.attributes[1])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute1 = [<path strokeWidth='0.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path1`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
+      attribute1 = [<path strokeWidth='.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path1`} d='M .5 .25 L 0 .25 L .5 0 L 1 .25 L .25 .5 L .75 .5' />];
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[2])).length > 1) {
-      attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[2])} fill={getAttributeFill(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute2 = Attributes[card.attributes[2]].paths.map((path: string, pathIndex: number) => <path strokeWidth='.04' stroke={getAttributeStroke(card.attributes[2])} fill={getAttributeFill(card.attributes[2])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute2 = [<path strokeWidth='0.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path2`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
+      attribute2 = [<path strokeWidth='.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path2`} d='M .5 .25 L 0 .25 L .5 0 L 1 .25 L .25 .5 L .75 .5' />];
     }
 
     if (availableCards.filter(cardId => Citizens[cardId].attributes.includes(card.attributes[3])).length > 1) {
-      attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='0.04' stroke={getAttributeStroke(card.attributes[3])} fill={getAttributeFill(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
+      attribute3 = Attributes[card.attributes[3]].paths.map((path: string, pathIndex: number) => <path strokeWidth='.04' stroke={getAttributeStroke(card.attributes[3])} fill={getAttributeFill(card.attributes[3])} key={`card${index}path${pathIndex}`} d={path} />);
     } else {
-      attribute3 = [<path strokeWidth='0.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path3`} d='M 0.5 0.25 L 0 0.25 L 0.5 0 L 1 0.25 L 0.25 0.5 L 0.75 0.5' />];
+      attribute3 = [<path strokeWidth='.04' stroke={Color.LightGray} fill={Color.None} key={`card${index}path3`} d='M .5 .25 L 0 .25 L .5 0 L 1 .25 L .25 .5 L .75 .5' />];
     }
 
     return <g key={`card${index}`} transform={`translate(${120 + (index * 220)} ${selected ? 1395 : 1400}) scale(2.3)`}>
@@ -674,10 +676,8 @@ export default function Game(): JSX.Element {
   Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).forEach(cellId => {
     const coords = getCoordsFromCellId(cellId);
 
-    mapElements.push(<g key={`district${cellId}outline`} mask="url(#mapMask)">
-      <g transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
-        <rect x={-2} y={-2} width={204} height={104} stroke={Color.None} fill={Color.Black} />
-      </g>
+    mapElements.push(<g key={`district${cellId}outline`} transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
+      <rect x={-2} y={-2} width={204} height={104} stroke={Color.None} fill={Color.Black} />
     </g>);
   });
 
@@ -707,11 +707,146 @@ export default function Game(): JSX.Element {
       height += 5;
     }
 
-    mapElements.push(<g key={`district${cellId}background`} mask="url(#mapMask)">
-      <g transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
-        <rect x={x} y={y} width={width} height={height} stroke={Color.None} fill={Color.White} />
-      </g>
+    mapElements.push(<g key={`district${cellId}background`} transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
+      <rect x={x} y={y} width={width} height={height} stroke={Color.None} fill={Color.White} />
     </g>);
+  });
+
+  Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).forEach(cellId => {
+    const coords = getCoordsFromCellId(cellId);
+
+    const amenities: Amenity[] = grid[cellId].amenities;
+
+    const waters = amenities.filter(amenity => amenity.code === AmenityCode.Water);
+
+    if (waters.length === 0) {
+      return;
+    }
+
+    const waters1 = waters.filter(w => w.density === 1);
+
+    if (waters1.length > 0) {
+      const visibleWater1: JSX.Element[] = [];
+
+      const adjacencies = {l: 0, tl: 0, tr: 0, r: 0, br: 0, bl: 0};
+
+      let left = grid[`(${coords.x - 2},${coords.y})`];
+
+      if (left === undefined) {
+        adjacencies.l = 1;
+        left = getDistrict(coords.x - 2, coords.y);
+
+        if (left.amenities.filter(a => a.code === AmenityCode.Water && a.density === 1).length > 0) {
+          visibleWater1.push(<path key={`district${cellId}watermaskleft`} d={`M 0 0 C ${WaterBorder * 0.275} 0, ${WaterBorder} 22.5, ${WaterBorder} 50 S ${WaterBorder * 0.275} 100, 0 100 Z`} fill={Color.White} stroke={Color.None} />);
+        }        
+      } else {
+        adjacencies.l = 2;
+        if (left.amenities.filter(a => a.code === AmenityCode.Water && a.density === 1).length > 0) {
+          visibleWater1.push(<ellipse key={`district${cellId}watermaskleft`} cy={50} rx={WaterBorder} ry={50} fill={Color.White} stroke={Color.None} />);
+        }        
+      }
+
+      let topLeft = grid[`(${coords.x - 1},${coords.y - 1})`];
+
+      if (topLeft === undefined) {
+        adjacencies.tl = 1;
+        topLeft = getDistrict(coords.x - 1, coords.y - 1);
+
+        if (topLeft.amenities.filter(a => a.code === AmenityCode.Water && a.density === 1).length > 0) {
+          visibleWater1.push(<path key={`district${cellId}watermasktopleft`} d={`M 0 0 C 0 ${WaterBorder * 0.275}, 22.5 ${WaterBorder}, 50 ${WaterBorder} S 100 ${WaterBorder * 0.275}, 100 0 Z`} fill={Color.White} stroke={Color.None} />);
+        }        
+      } else {
+        adjacencies.tl = 2;
+        if (topLeft.amenities.filter(a => a.code === AmenityCode.Water && a.density === 1).length > 0) {
+          visibleWater1.push(<ellipse key={`district${cellId}watermasktopleft`} cx={50} rx={50} ry={WaterBorder} fill={Color.White} stroke={Color.None} />);
+        }        
+      }
+
+      let topRight = grid[`(${coords.x + 1},${coords.y - 1})`];
+
+      if (topRight === undefined) {
+        adjacencies.tr = 1;
+        topRight = getDistrict(coords.x + 1, coords.y - 1);
+
+        if (topRight.amenities.filter(a => a.code === AmenityCode.Water && a.density === 1).length > 0) {
+          visibleWater1.push(<path key={`district${cellId}watermasktopRight`} d={`M 100 0 C 100 ${WaterBorder * 0.275}, 122.5 ${WaterBorder}, 150 ${WaterBorder} S 200 ${WaterBorder * 0.275}, 200 0 Z`} fill={Color.White} stroke={Color.None} />);
+        }        
+      } else {
+        adjacencies.tr = 2;
+        if (topRight.amenities.filter(a => a.code === AmenityCode.Water && a.density === 1).length > 0) {
+          visibleWater1.push(<ellipse key={`district${cellId}watermasktopRight`} cx={150} rx={50} ry={WaterBorder} fill={Color.White} stroke={Color.None} />);
+        }        
+      }
+
+      let right = grid[`(${coords.x + 2},${coords.y})`];
+
+      if (right === undefined) {
+        adjacencies.r = 1;
+        right = getDistrict(coords.x + 2, coords.y);
+
+        if (right.amenities.filter(a => a.code === AmenityCode.Water && a.density === 1).length > 0) {
+          visibleWater1.push(<path key={`district${cellId}watermaskright`} d={`M 200 0 C ${200 - (WaterBorder * 0.275)} 0, ${200 - WaterBorder} 22.5, ${200 - WaterBorder} 50 S ${200 - (WaterBorder * 0.275)} 100, 200 100 Z`} fill={Color.White} stroke={Color.None} />);
+        }        
+      }
+
+      let bottomRight = grid[`(${coords.x + 1},${coords.y + 1})`];
+
+      if (bottomRight === undefined) {
+        adjacencies.br = 1;
+        bottomRight = getDistrict(coords.x + 1, coords.y + 1);
+
+        if (bottomRight.amenities.filter(a => a.code === AmenityCode.Water && a.density === 1).length > 0) {
+          visibleWater1.push(<path key={`district${cellId}watermaskbottomRight`} d={`M 100 100 C 100 ${100 - (WaterBorder * 0.275)}, 122.5 ${100 - WaterBorder}, 150 ${100 - WaterBorder} S 200 ${100 - (WaterBorder * 0.275)}, 200 100 Z`} fill={Color.White} stroke={Color.None} />);
+        }        
+      }
+
+      let bottomLeft = grid[`(${coords.x - 1},${coords.y + 1})`];
+
+      if (bottomLeft === undefined) {
+        adjacencies.bl = 1;
+        bottomLeft = getDistrict(coords.x - 1, coords.y + 1);
+
+        if (bottomLeft.amenities.filter(a => a.code === AmenityCode.Water && a.density === 1).length > 0) {
+          visibleWater1.push(<path key={`district${cellId}watermaskbottomleft`} d={`M 0 100 C 0 ${100 - (WaterBorder * 0.275)}, 22.5 ${100 - WaterBorder}, 50 ${100 - WaterBorder} S 100 ${100 - (WaterBorder * 0.275)}, 100 100 Z`} fill={Color.White} stroke={Color.None} />);
+        }        
+      }
+
+      if (adjacencies.l === 1 && adjacencies.tl === 1) {
+        visibleWater1.push(<path key={`district${cellId}watermasklefttopleft`} d={`M 0 0 L 50 0 L 50 ${WaterBorder} C ${50 - ((50 - WaterBorder) * 0.55)} ${WaterBorder}, ${WaterBorder} ${50 - ((50 - WaterBorder) * 0.55)}, ${WaterBorder} 50 L 0 50 Z`} fill={Color.White} stroke={Color.None} />);
+      }
+      
+      if (adjacencies.tl === 1 && adjacencies.tr === 1) {
+        visibleWater1.push(<rect key={`district${cellId}watermasktoprighttopleft`} x={50} width={100} height={WaterBorder} fill={Color.White} stroke={Color.None} />);
+      }
+
+      if (adjacencies.tr === 1 && adjacencies.r === 1) {
+        visibleWater1.push(<path key={`district${cellId}watermasktoprightright`} d={`M 200 0 L 150 0 L 150 ${WaterBorder} C ${150 + ((50 - WaterBorder) * 0.55)} ${WaterBorder}, ${200 - WaterBorder} ${50 - ((50 - WaterBorder) * 0.55)}, ${200 - WaterBorder} 50 L 200 50 Z`} fill={Color.White} stroke={Color.None} />);
+      }
+
+      if (adjacencies.r === 1 && adjacencies.br === 1) {
+        visibleWater1.push(<path key={`district${cellId}watermaskrightbottomright`} d={`M 200 100 L 150 100 L 150 ${100 - WaterBorder} C ${150 + ((50 - WaterBorder) * 0.55)} ${100 - WaterBorder}, ${200 - WaterBorder} ${50 + ((50 - WaterBorder) * 0.55)}, ${200 - WaterBorder} 50 L 200 50 Z`} fill={Color.White} stroke={Color.None} />);
+      }
+
+      if (adjacencies.bl === 1 && adjacencies.br === 1) {
+        visibleWater1.push(<rect key={`district${cellId}watermaskbottomrighttopleft`} x={50} y={100 - WaterBorder} width={100} height={WaterBorder} fill={Color.White} stroke={Color.None} />);
+      }
+
+      if (adjacencies.bl === 1 && adjacencies.l === 1) {
+        visibleWater1.push(<path key={`district${cellId}watermaskleftbottomleft`} d={`M 0 100 L 50 100 L 50 ${100 - WaterBorder} C ${50 - ((50 - WaterBorder) * 0.55)} ${100 - WaterBorder}, ${WaterBorder} ${50 + ((50 - WaterBorder) * 0.55)}, ${WaterBorder} 50 L 0 50 Z`} fill={Color.White} stroke={Color.None} />);
+      }
+  
+      mapElements.push(<g key={`district${cellId}watermask`} transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
+        <mask id={`district${coords.x},${coords.y}watermask`}>
+          <rect x={0} y={0} width={200} height={100} fill={Color.Black} stroke={Color.None} />
+          {visibleWater1}
+        </mask>
+      </g>);
+  
+      mapElements.push(<g mask={`url(#district${coords.x},${coords.y}watermask)`} key={`district${cellId}water`} transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
+        <rect x={-100} y={-150} width={400} height={400} fill={Color.LightGray} stroke={Color.None} />
+        <rect x={-100} y={-150} width={400} height={400} fill='url(#Water1)' stroke={Color.None} />
+      </g>);  
+    }
   });
 
   Object.keys(grid).sort(cellId => selectedCellId === cellId ? 1 : -1).forEach(cellId => {
@@ -720,20 +855,9 @@ export default function Game(): JSX.Element {
     const amenityElements: JSX.Element[] = [];
     const amenities: Amenity[] = grid[cellId].amenities;
 
-    const water = amenities.filter(amenity => amenity.code === AmenityCode.Water)[0];
     const road = amenities.filter(amenity => amenity.code === AmenityCode.Road)[0];
     const housing = amenities.filter(amenity => amenity.code === AmenityCode.Housing)[0];
     const medical = amenities.filter(amenity => amenity.code === AmenityCode.Medical)[0];
-
-    if (water !== undefined) {
-      if (water.size === 1) {
-        amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80' stroke={Color.Black} fill={Color.None} />);
-      } else if (water.size === 2) {
-        amenityElements.push(<path key={`district${cellId}water`} d='M 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke={Color.Black} fill={Color.None} />);
-      } else if (water.size === 4) {
-        amenityElements.push(<path key={`district${cellId}water`} d='M 50,70 L 70,80 L 90,70 L 110,80 L 130,70 L 150,80 L 170,70 L 190,80' stroke={Color.Black} fill={Color.None} />);
-      }
-    }
 
     if (road !== undefined) {
       amenityElements.push(<line key={`district${cellId}road`} x1={50} x2={150} y1={50} y2={50} stroke={Color.Black} strokeWidth={1} />);
@@ -763,11 +887,9 @@ export default function Game(): JSX.Element {
       }
     }
 
-    mapElements.push(<g key={`district${cellId}`} mask="url(#mapMask)">
-      <g transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
-        {amenityElements}
-        {selectedCellId === cellId && <circle cx={100} cy={50} r={50} stroke={Color.DarkGray} fill={Color.None} />}
-      </g>
+    mapElements.push(<g key={`district${cellId}`}  transform={`translate(${(150 * zoom) + (coords.x * 300 * zoom) + (coordinates.x * 3) - (450 * (zoom - 1))} ${(300 * zoom) + (coords.y * 300 * zoom) + (coordinates.y * 3) - (450 * (zoom - 1))}) scale(${zoom * 3})`}>
+      {amenityElements}
+      {selectedCellId === cellId && <circle cx={100} cy={50} r={50} stroke={Color.DarkGray} fill={Color.None} />}
     </g>);
   });
 
@@ -775,8 +897,29 @@ export default function Game(): JSX.Element {
     <>
       <div>
         <svg viewBox='0 0 900 1600' xmlns='http://www.w3.org/2000/svg' width='18em' shapeRendering="geometricPrecision">
+          <defs>
+            <pattern id="Pattern" x="0" y="0" width=".04" height=".04">
+              <rect width="8.8" height="8.8" fill={Color.DarkGray} />
+              <rect x="17.6" y="8.8" width="8.8" height="8.8" fill={Color.DarkGray} />
+              <rect x="8.8" y="17.6" width="8.8" height="8.8" fill={Color.DarkGray} />
+              <rect x="25.4" y="25.4" width="8.8" height="8.8" fill={Color.DarkGray} />
+            </pattern>
+            <pattern id="Water1" x="0" y="0" width=".025" height=".025">
+              <path d='M 1 2.5 C 2.5 2, 1.5 1, 3.5 2.5 S 3 1.5, 6 2.5' fill={Color.None} stroke={Color.MediumGray} />
+              <path d='M 6 7.5 C 7.5 7, 6.5 6, 8.5 7.5 S 8 6.5, 11 7.5' fill={Color.None} stroke={Color.MediumGray} />
+            </pattern>
+            <pattern id="Water2" x="0" y="0" width=".025" height=".025">
+            <path d='M 1 2.5 C 2.5 2, 1.5 1, 3.5 2.5 S 3 1.5, 6 2.5' fill={Color.None} stroke={Color.DarkGray} />
+              <path d='M 6 7.5 C 7.5 7, 6.5 6, 8.5 7.5 S 8 6.5, 11 7.5' fill={Color.None} stroke={Color.DarkGray} />
+            </pattern>
+            <pattern id="Water4" x="0" y="0" width=".025" height=".025">
+            <path d='M 1 2.5 C 2.5 2, 1.5 1, 3.5 2.5 S 3 1.5, 6 2.5' fill={Color.None} stroke={Color.Black} />
+              <path d='M 6 7.5 C 7.5 7, 6.5 6, 8.5 7.5 S 8 6.5, 11 7.5' fill={Color.None} stroke={Color.Black} />
+            </pattern>
+          </defs>
           <rect width='900' height='1600' fill={Color.Black} stroke={Color.None} />
-          <rect id='mapframe' x='10' y='10' width='880' height='880' fill={Color.DarkGray} stroke={Color.None} />
+          <rect id='mapframe' x='10' y='10' width='880' height='880' fill={Color.LightGray} stroke={Color.None} />
+          <rect id='mapframepattern' x='10' y='10' width='880' height='880' fill='url(#Pattern)' stroke={Color.None} />
           <rect id='actionframe' x='10' y='900' width='880' height='250' fill={Color.White} stroke={Color.None} />
           <rect id='cardframe' x='10' y='1160' width='880' height='430' fill={Color.White} stroke={Color.None} />
           {cardsInDeck().length > 0 && <g transform='translate(15 1020)'>
@@ -808,7 +951,9 @@ export default function Game(): JSX.Element {
           <mask id="mapMask">
             <rect x='10' y='10' width='880' height='880' fill={Color.White} stroke={Color.None} />
           </mask>
-          {mapElements}
+          <g mask="url(#mapMask)">
+            {mapElements}
+          </g>
           <rect x='5' y='5' width='890' height='880' fill={Color.Transparent} stroke={Color.None} cursor={dragging ? 'move': 'pointer'}
             onMouseDown={(event) => { setOrigin({ x: event.clientX, y: event.clientY }); setCoordinatesOrigin({x: coordinates.x, y: coordinates.y}); setMouseDown(true); }}
             onMouseMove={(event) => {
